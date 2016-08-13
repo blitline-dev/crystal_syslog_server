@@ -1,0 +1,63 @@
+require "openssl" ifdef !without_openssl
+require "socket"
+require "./processor.cr"
+require "./frame"
+class Tcp
+
+  @wants_close = false
+
+  def self.new(port)
+    new("0.0.0.0", port)
+  end
+
+  def initialize(@host : String, @port : Int32)
+    @processor = Processor.new
+  end
+
+  def bind
+    @server ||= TCPServer.new(@host, @port)
+  end
+
+  def listen
+
+ch = Channel(TCPSocket).new
+
+50.times do
+  spawn do
+    loop do
+      socket = ch.receive
+      data = socket.gets
+			p data
+      socket.close
+    end
+  end
+end
+
+server = TCPServer.new("0.0.0.0", 6768)
+loop do
+  socket = server.accept
+  ch.send socket
+end
+  end
+
+  def close
+    @wants_close = true
+    @processor.close
+    if server = @server
+      server.close
+      @server = nil
+    end
+  end
+
+  private def handle_client(io)
+    # nil means the server was closed
+    return unless io
+
+    io.sync = false
+    dat = Frame.from_io(io)
+        # EOF
+    io.flush
+#    @processor.process(io, io)
+  end
+
+end
