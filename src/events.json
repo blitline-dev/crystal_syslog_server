@@ -1,0 +1,11 @@
+{
+ "shake@nat" : [
+		{
+			"find" : "thou"
+		},
+    { "find" : "king" },
+    { "find" : "daughter" },
+    { "find" : "god" }
+	]
+
+}

@@ -36,10 +36,10 @@ class Processor
 		time = build_date(month, segments[1], segments[2])
 		output = Hash(String, String).new
 
-    output["log_local_time"] = time.to_s
+    output["log_local_time"] = time.to_s("%s")
 		output["host"] = hostname
     output["tag"] = tag
-  	output["ingestion_time"] = Time.now.to_s
+  	output["ingestion_time"] = Time.now.to_s("%s")
 		output["body"] = segments[5..-1].join(" ").strip
 		fac_sev = TypeTable.define(log_type.to_i)
     output["facility"] = fac_sev[1].to_s

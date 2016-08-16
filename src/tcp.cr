@@ -10,14 +10,14 @@ class Tcp
   end
 
   def initialize(@host : String, @port : Int32)
+		@action = Action.new("/tmp/")
   end
 
 	def reader(socket : TCPSocket, processor : Processor)
     while data = socket.gets
       formatted_data = processor.process(data)
-			# Formatted Data: {"log_local_time" => "2016-08-14 00:30:58", "ingestion_time" => "2016-08-14 00:30:54 +0000",
-			#  "body" => "ANTONY. Moon and stars!", "facility" => "local0", "severity" => "6"}
-			Action.process(formatted_data)
+			p formatted_data.inspect
+			@action.process(formatted_data)
     end
 	end
 
