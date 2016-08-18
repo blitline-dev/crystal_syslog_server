@@ -19,7 +19,7 @@ class Tcp
 		data = socket.gets
 		max_lines = @connections > 35 ? 10000 : 1000
     while line_count < max_lines && data
-			if data && data.length > 3
+			if data && data.size > 3
 				line_count += 1
 				begin
 					
