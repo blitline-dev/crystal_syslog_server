@@ -1,5 +1,5 @@
 puts "Starting RELP server"
-puts "listening on 127.0.0.1:6768"
+puts "listening on 0.0.0.0:6768"
 
 require "./tcp.cr"
 
