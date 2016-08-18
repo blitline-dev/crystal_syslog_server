@@ -22,7 +22,7 @@ class Action
 	def setup_configs(file_watcher : FileWatcher)
 		# Events Config
     json_watcher = JSONFileWatcher.new(file_watcher)
-    r = Proc(Hash(String, JSON::Type), Nil).new { |x| @events = x }
+    r = Proc(Hash(String, JSON::Type), Nil).new { |x| @events = x["events"] as Hash(String, JSON::Type) }
     json_watcher.watch_file("events.json", r )
 	end
 
@@ -56,18 +56,33 @@ class Action
 
 	private def check_events(data_hash)
 		tag = data_hash["tag"]
-		events_for_tag = @events[tag]? as Array(JSON::Type) 
+		events_for_tag = @events[tag]? as Array(JSON::Type) | Nil
 		return unless events_for_tag
 
 		events_for_tag.each do |event|
 			# Compiler workaround
 			b = event.as(Hash(String, JSON::Type))
+			name = b.fetch("name", Nil).to_s
 			find = b.fetch("find", Nil).to_s
+			findex = b.fetch("findex", Nil).to_s
+			replace = b.fetch("replace", Nil).to_s
 			# End compiler workaround
-			if find && data_hash["body"].includes?(find) 
-				write_event(data_hash, find)
-			end
+			handle_find( data_hash, find, name, false) unless find.empty?
+      handle_find( data_hash, find, name, true) unless findex.empty?
 		end
+	end
+
+	private def handle_find(data_hash : Hash(String, String), find : String, name : String, is_regex : Bool)
+		if is_regex
+			regex = Regex.new(find) 
+			data_hash["body"].match(regex) do
+				write_event(data_hash, name)
+			end
+		else	
+			if data_hash["body"].includes?(find)
+    		write_event(data_hash, name)
+			end
+		end	
 	end
 
 	private def write_event(data_hash : Hash(String, String), event_name : String)

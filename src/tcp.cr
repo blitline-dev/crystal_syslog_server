@@ -11,24 +11,32 @@ class Tcp
 
   def initialize(@host : String, @port : Int32)
 		@action = Action.new("/tmp/")
+		@connections = 0
   end
 
 	def reader(socket : TCPSocket, processor : Processor)
-    while data = socket.gets
-      formatted_data = processor.process(data)
+		line_count = 0
+		data = socket.gets
+		max_lines = @connections > 35 ? 10000 : 1000
+    while line_count < max_lines && data
+			line_count += 1
+	    formatted_data = processor.process(data)
 			p formatted_data.inspect
 			@action.process(formatted_data)
+			data = socket.gets
     end
 	end
 
 	def spawn_listener(socket_channel : Channel)
-		3.times do
+		40.times do
       spawn do
         loop do
           socket = socket_channel.receive
+					@connections += 1
 					processor = Processor.new
 					reader(socket, processor)
           socket.close
+					@connections -= 1
         end
       end
     end
@@ -41,6 +49,7 @@ class Tcp
 		spawn_listener(ch)
 		loop do
   		socket = server.accept
+			p socket.inspect
   		ch.send socket
 		end 
   end

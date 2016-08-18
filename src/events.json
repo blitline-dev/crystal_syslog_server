@@ -1,11 +1,13 @@
 {
- "shake@nat" : [
-		{
-			"find" : "thou"
-		},
-    { "find" : "king" },
-    { "find" : "daughter" },
-    { "find" : "god" }
-	]
-
+ "events" : {
+ 	 "shake@nat" : [
+			{ 
+				"name" : "thou_finder",
+				"find" : "thou"
+			},
+    	{ "name" : "king_finder", "find" : "king" },
+    	{ "name" : "daughter_finder", "find" : "daughter" },
+    	{ "name" : "god_finder", "find" : "god" }
+		]
+  }
 }
