@@ -19,16 +19,19 @@ class Tcp
 		data = socket.gets
 		max_lines = @connections > 35 ? 10000 : 1000
     while line_count < max_lines && data
-			line_count += 1
-			begin
-		    formatted_data = processor.process(data)
-				p formatted_data.inspect
-				@action.process(formatted_data)
-			rescue ex
-				p ex.message
-				p "Data:#{data}"
-      end
-			data = socket.gets
+			if data && data.length > 3
+				line_count += 1
+				begin
+					
+		  	  formatted_data = processor.process(data)
+					p formatted_data.inspect
+					@action.process(formatted_data)
+				rescue ex
+					p ex.message
+					p "Data:#{data}"
+   	    end
+				data = socket.gets
+		  end
     end
 	end
 
