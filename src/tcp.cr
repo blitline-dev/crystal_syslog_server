@@ -5,12 +5,12 @@ require "./frame"
 require "./action"
 class Tcp
 
-  def self.new(port)
-    new("0.0.0.0", port)
+  def self.new(port, base_dir)
+    new("0.0.0.0", port, base_dir)    
   end
 
-  def initialize(@host : String, @port : Int32)
-		@action = Action.new("/tmp/")
+  def initialize(@host : String, @port : Int32, @base_dir : String)
+		@action = Action.new(@base_dir)
 		@connections = 0
   end
 
@@ -22,9 +22,7 @@ class Tcp
 			if data && data.size > 5
 				line_count += 1
 				begin
-					
 		  	  formatted_data = processor.process(data)
-					p formatted_data.inspect
 					@action.process(formatted_data)
 				rescue ex
 					p ex.message
@@ -57,7 +55,6 @@ class Tcp
 		spawn_listener(ch)
 		loop do
   		socket = server.accept
-			p socket.inspect
   		ch.send socket
 		end 
   end

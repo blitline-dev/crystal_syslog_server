@@ -1,6 +1,6 @@
 {
  "events" : {
- 	 "shake@nat" : [
+ 	 "shake@mac" : [
 			{ 
 				"name" : "thou_finder",
 				"find" : "thou"
