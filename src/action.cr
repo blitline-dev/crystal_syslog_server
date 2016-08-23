@@ -24,7 +24,10 @@ class Action
 		# Events Config
     json_watcher = JSONFileWatcher.new(file_watcher, @debug)
     r = Proc(Hash(String, JSON::Type), Nil).new { |x| @events = x["events"] as Hash(String, JSON::Type) }
-    json_watcher.watch_file("#{@file_root}/events.json", r )
+		filepath = "#{@file_root}/events.json"
+		data = "{ \"events\" : {} }"
+		File.write(filepath, data) unless File.exists?(filepath)
+    json_watcher.watch_file(filepath, r )
 	end
 
 	def process(data : Hash(String, String) | ::Nil)
