@@ -1,22 +1,18 @@
 require "openssl" ifdef !without_openssl
 require "socket"
 require "./processor.cr"
-require "./frame"
 require "./action"
 class Tcp
 
-  def self.new(port, base_dir)
-    new("0.0.0.0", port, base_dir)    
-  end
-
-  def initialize(@host : String, @port : Int32, @base_dir : String)
-		@action = Action.new(@base_dir)
+  def initialize(@host : String, @port : Int32, @base_dir : String, @debug : Bool)
+		@action = Action.new(@base_dir, @debug)
 		@connections = 0
   end
 
 	def reader(socket : TCPSocket, processor : Processor)
 		line_count = 0
 		data = socket.gets
+    puts "Recieved: #{data}" if @debug
 		max_lines = @connections > 35 ? 10000 : 1000
     while line_count < max_lines && data
 			if data && data.size > 5
@@ -51,12 +47,12 @@ class Tcp
   def listen
 		ch = Channel(TCPSocket).new
 		server = TCPServer.new(@host, @port)
-		
+
 		spawn_listener(ch)
 		loop do
   		socket = server.accept
   		ch.send socket
-		end 
+		end
   end
 
 end

@@ -3,14 +3,15 @@ require "json"
 require "./file_manager"
 require "./json_file_watcher"
 
-      # Formatted Data: {"log_local_time" => "2016-08-14 00:30:58", "ingestion_time" => "2016-08-14 00:30:54 +0000",
-      #  "body" => "ANTONY. Moon and stars!", "facility" => "local0", "severity" => "6"}
-			# 1471144342 94925 ip-10-168-66-18 blitag Writing /tmp/to_ttf.pe...
 class Action
+	EVENT_CONFIG_NAME = "event_name"
+	EVENT_CONFIG_FIND = "find"
+	EVENT_CONFIG_FINDEX = "findex"
+	EVENT_CONFIG_REPLACE = "replace"
+	EVENT_BODY = "body"
+	TAG = "tag"
 
-	CONFIG_FILE = "events.json"
-
-	def initialize(@file_root : String)
+	def initialize(@file_root : String, @debug : Bool)
 		@file_watcher = FileWatcher.new
 		@events = Hash(String, JSON::Type).new
 		setup_configs(@file_watcher)
@@ -21,12 +22,13 @@ class Action
 
 	def setup_configs(file_watcher : FileWatcher)
 		# Events Config
-    json_watcher = JSONFileWatcher.new(file_watcher)
+    json_watcher = JSONFileWatcher.new(file_watcher, @debug)
     r = Proc(Hash(String, JSON::Type), Nil).new { |x| @events = x["events"] as Hash(String, JSON::Type) }
-    json_watcher.watch_file("events.json", r )
+    json_watcher.watch_file("#{@file_root}/events.json", r )
 	end
 
 	def process(data : Hash(String, String) | ::Nil)
+		puts "Action is processing #{data}" if @debug
 		return unless data
 		@channel.send data
 	end
@@ -55,38 +57,41 @@ class Action
 	end
 
 	private def check_events(data_hash)
-		tag = data_hash["tag"]
-		events_for_tag = @events[tag]? as Array(JSON::Type) | Nil
+		tag = data_hash[TAG]
+		events_for_tag = @events[tag]? as Hash(String, JSON::Type) | Nil
 		return unless events_for_tag
 
-		events_for_tag.each do |event|
+		puts "Checking Events..." if @debug
+		events_for_tag.keys.each do |event_key|
 			# Compiler workaround
-			b = event.as(Hash(String, JSON::Type))
-			name = b.fetch("name", Nil).to_s
-			find = b.fetch("find", Nil).to_s
-			findex = b.fetch("findex", Nil).to_s
-			replace = b.fetch("replace", Nil).to_s
+			b = events_for_tag[event_key].as(Hash(String, JSON::Type))
+			name = b.fetch(EVENT_CONFIG_NAME, nil).to_s
+			find = b.fetch(EVENT_CONFIG_FIND, nil).to_s
+			findex = b.fetch(EVENT_CONFIG_FINDEX, nil).to_s
+			replace = b.fetch(EVENT_CONFIG_REPLACE, nil).to_s
 			# End compiler workaround
 			handle_find( data_hash, find, name, false) unless find.empty?
-      handle_find( data_hash, find, name, true) unless findex.empty?
+      handle_find( data_hash, find, name, true) unless findex
 		end
+		puts "... Done Checking Events" if @debug
 	end
 
 	private def handle_find(data_hash : Hash(String, String), find : String, name : String, is_regex : Bool)
 		if is_regex
-			regex = Regex.new(find) 
-			data_hash["body"].match(regex) do
+			regex = Regex.new(find)
+			data_hash[EVENT_BODY].match(regex) do
 				write_event(data_hash, name)
 			end
-		else	
-			if data_hash["body"].includes?(find)
+		else
+			if data_hash[EVENT_BODY].includes?(find)
     		write_event(data_hash, name)
 			end
-		end	
+		end
 	end
 
 	private def write_event(data_hash : Hash(String, String), event_name : String)
     @file_manager.write_to_file(data_hash, event_name) do |file|
+			puts "Writing Event #{event_name}" if @debug
       handlle_output(data_hash, file)
     end
 	end

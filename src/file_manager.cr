@@ -12,13 +12,13 @@ class FileManager
   end
 
 	def initialize(@root_url : String)
-  	@files = Hash(String,OpenFile).new	
+  	@files = Hash(String,OpenFile).new
 	end
 
   def write_to_file(data_hash : Hash(String, String), event_name : String | Nil)
 		open_file = get_open_file(data_hash, event_name)
     file = open_file.file
-	
+
 		yield file
 
     unless event_name.nil?
@@ -26,7 +26,6 @@ class FileManager
 			if open_file.last_written < time_now - 120
 					# Forcing file flush for events that haven't
 					# written in over 2 minutes
-					p "File FLUSH!"
 					open_file.file.flush
 			end
  			open_file.last_written = time_now
@@ -105,5 +104,3 @@ class FileManager
 	end
 
 end
-
-

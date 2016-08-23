@@ -1,11 +1,10 @@
 require "./type_table"
 # ["<134>Aug", "13", "00:27:32", "nat", "shake@nat", "Tell", "him", "I'll", "send", "Duke", "Edmund", "to", "the", "Tower-\\n"]
-# {"log_local_time" => "2016-08-14 00:30:58", "ingestion_time" => "2016-08-14 00:30:54 +0000", 
+# {"log_local_time" => "2016-08-14 00:30:58", "ingestion_time" => "2016-08-14 00:30:54 +0000",
 #  "body" => "ANTONY. Moon and stars!", "facility" => "local0", "severity" => "6"}
 
 class Processor
 	LOOKUP_HASH = { "Jan" => 1, "Feb" => 2, "Mar" => 3, "Apr" => 4, "May" => 5, "Jun" => 6 , "Jul" => 7 , "Aug" => 8, "Sep" => 9,  "Oct" => 10, "Nov" => 11, "Dev" => 12}
-
   def process(data : String) : Hash(String, String) | ::Nil
 		begin
 			hash = split_data(data)
@@ -52,7 +51,6 @@ class Processor
 		year = Time.now.year
 		hour_minute_seconds = time.split(":")
     built_time = Time.new(year, LOOKUP_HASH[month[0..2].camelcase], day.to_i, hour_minute_seconds[0].to_i, hour_minute_seconds[1].to_i, hour_minute_seconds[2].to_i)
-		return built_time		
+		return built_time
 	end
 end
-

@@ -1,13 +1,12 @@
 {
  "events" : {
- 	 "shake@mac" : [
-			{ 
-				"name" : "thou_finder",
-				"find" : "thou"
-			},
-    	{ "name" : "king_finder", "find" : "king" },
-    	{ "name" : "daughter_finder", "find" : "daughter" },
-    	{ "name" : "god_finder", "find" : "god" }
-		]
+   "shake@mac" : {
+      "thou_finder" : {
+          "color" : "red",
+          "event_name" : "thou_finder",
+          "find" : "thou",
+          "description" : "description"
+      }
+    }
   }
 }

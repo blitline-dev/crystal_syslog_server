@@ -19,7 +19,7 @@ class FileWatcher
   end
 
   def watch
-    spawn do 
+    spawn do
       loop do
         @files.each do | name, file_data |
           if has_changed(name, file_data)
@@ -53,4 +53,3 @@ class FileWatcher
   end
 
 end
-
