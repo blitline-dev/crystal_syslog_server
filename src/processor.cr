@@ -19,27 +19,42 @@ class Processor
 	def split_data(data : String) : Hash(String, String)
 		segments = data.split(" ")
 		type_month = segments[0]
-		hostname = segments[3]
-    tag = segments[4]
 		log_type = ""
     month = ""
+		hostname = ""
+		tag = ""
+		body_start = 5
 
-		type_month.match(/<([0-9]*)>/) do |m|
+		precise_date = false
+		type_month.match(/<([0-9]*)>(1?)/) do |m|
 			log_type = m[1] if m
+			precise_date = true if m[2]
 		end
 
-		type_month.match(/>(.*)/) do |m|
-			month = m[1] if m
-    end
+		if precise_date
+			iso_date_string = segments[1]
+			#2016-08-23T17:31:37.769241Z
+			time = Time.parse(iso_date_string, "%Y-%m-%dT%H:%M:%S", Time::Kind::Utc)
+			hostname = segments[2]
+	    tag = segments[3]
+			body_start = 4
+		else
+			type_month.match(/>(.*)/) do |m|
+				month = m[1] if m
+	    end
+			hostname = segments[3]
+	    tag = segments[4]
+			body_start = 5
+			time = build_date(month, segments[1], segments[2])
 
-		time = build_date(month, segments[1], segments[2])
+		end
+
 		output = Hash(String, String).new
-
     output["log_local_time"] = time.to_s("%s")
 		output["host"] = hostname
     output["tag"] = tag
   	output["ingestion_time"] = Time.now.to_s("%s")
-		output["body"] = segments[5..-1].join(" ").strip
+		output["body"] = segments[body_start..-1].join(" ").strip
 		fac_sev = TypeTable.define(log_type.to_i)
     output["facility"] = fac_sev[1].to_s
     output["severity"] = fac_sev[0].to_s
