@@ -23,15 +23,19 @@ class Processor
     month = ""
 		hostname = ""
 		tag = ""
+		proc_id = ""
+		msg_id = ""
+		structured_data = ""
+
 		body_start = 5
 
-		precise_date = false
+		version_one = false
 		type_month.match(/<([0-9]*)>(1?)/) do |m|
 			log_type = m[1] if m
-			precise_date = true if m[2] == "1"
+			version_one = true if m[2] == "1"
 		end
 
-		if precise_date
+		if version_one
 			iso_date_string = segments[1]
 			begin
 				time = Time.parse(iso_date_string, "%Y-%m-%dT%H:%M:%S", Time::Kind::Utc)
@@ -41,7 +45,12 @@ class Processor
 			end
 			hostname = segments[2]
 	    tag = segments[3]
-			body_start = 4
+
+			proc_id = segments[4]
+			msg_id = segments[5]
+			structured_data = segments[6]
+
+			body_start = 7
 		else
 			type_month.match(/>(.*)/) do |m|
 				month = m[1] if m
@@ -56,6 +65,10 @@ class Processor
     output["log_local_time"] = time.to_s("%s")
 		output["host"] = hostname
     output["tag"] = tag
+		output["proc_id"] = proc_id
+		output["msg_id"] = msg_id
+		output["structured_data"] = structured_data
+
   	output["ingestion_time"] = Time.now.to_s("%s")
 		output["body"] = segments[body_start..-1].join(" ").strip
 		fac_sev = TypeTable.define(log_type.to_i)
