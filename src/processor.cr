@@ -28,13 +28,17 @@ class Processor
 		precise_date = false
 		type_month.match(/<([0-9]*)>(1?)/) do |m|
 			log_type = m[1] if m
-			precise_date = true if m[2]
+			precise_date = true if m[2] == "1"
 		end
 
 		if precise_date
 			iso_date_string = segments[1]
-			#2016-08-23T17:31:37.769241Z
-			time = Time.parse(iso_date_string, "%Y-%m-%dT%H:%M:%S", Time::Kind::Utc)
+			begin
+				time = Time.parse(iso_date_string, "%Y-%m-%dT%H:%M:%S", Time::Kind::Utc)
+			rescue bs
+				puts bs.inspect_with_backtrace
+				time = Time.now
+			end
 			hostname = segments[2]
 	    tag = segments[3]
 			body_start = 4
@@ -46,7 +50,6 @@ class Processor
 	    tag = segments[4]
 			body_start = 5
 			time = build_date(month, segments[1], segments[2])
-
 		end
 
 		output = Hash(String, String).new
