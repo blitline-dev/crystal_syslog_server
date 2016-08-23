@@ -52,10 +52,11 @@ class Action
 
 	private def handlle_output(data_hash : Hash(String, String), file : File)
 		time = data_hash["ingestion_time"]
-    suid = SecureRandom.urlsafe_base64(8)
+		suid = data_hash["suid"]
     host = data_hash["host"]
     tag = data_hash["tag"]
     body = data_hash["body"]
+
     file.puts("#{time} #{suid} #{host} #{tag} #{body}")
 	end
 
@@ -74,7 +75,7 @@ class Action
 			replace = b.fetch(EVENT_CONFIG_REPLACE, nil).to_s
 			# End compiler workaround
 			handle_find( data_hash, find, name, false) unless find.empty?
-      handle_find( data_hash, find, name, true) unless findex
+      handle_find( data_hash, find, name, true) unless findex.empty?
 		end
 		puts "... Done Checking Events" if @debug
 	end
