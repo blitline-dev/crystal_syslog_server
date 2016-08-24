@@ -14,7 +14,8 @@ class Tcp
     begin
       data = socket.gets
     rescue ex
-      puts ex.inspect_with_backtrace# if @debug
+      # Move to @debug
+      puts ex.inspect_with_backtrace 
       puts "From Socket Address:" + socket.remote_address.to_s if socket.remote_address
     end
   end
