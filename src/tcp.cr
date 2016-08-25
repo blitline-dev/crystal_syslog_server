@@ -4,13 +4,15 @@ require "./processor.cr"
 require "./action"
 class Tcp
 
+  TOTAL_FIBERS = 200
+
   def initialize(@host : String, @port : Int32, @base_dir : String, @debug : Bool)
 		@action = Action.new(@base_dir, @debug)
 		@connections = 0
   end
 
   def get_socket_data(socket : TCPSocket)
-    daata = nil
+    data = nil
     begin
       data = socket.gets
     rescue ex
@@ -23,13 +25,18 @@ class Tcp
   end
 
 	def reader(socket : TCPSocket, processor : Processor)
-		line_count = 0
   	data = get_socket_data(socket)
+
+    if data == "stats\n"
+      stats_response(socket)
+      return
+    end
+
     puts "Recieved: #{data}" if @debug
-		max_lines = @connections > 35 ? 50 : 100
-    while line_count < max_lines && data
+    while data
+       
+
 			if data && data.size > 5
-				line_count += 1
 				begin
 		  	  formatted_data = processor.process(data)
 					@action.process(formatted_data)
@@ -42,8 +49,18 @@ class Tcp
     end
 	end
 
+  def stats_response(socket : TCPSocket)
+    data = {
+      "debug" : @debug,
+      "connections" : @connections,
+      "port" :  @port,
+      "available" : TOTAL_FIBERS
+    }
+    socket.puts(data.to_json)
+  end
+
 	def spawn_listener(socket_channel : Channel)
-		200.times do
+		TOTAL_FIBERS.times do
       spawn do
         loop do
           socket = socket_channel.receive
