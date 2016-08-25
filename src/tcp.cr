@@ -15,17 +15,18 @@ class Tcp
       data = socket.gets
     rescue ex
       # Move to @debug
-      puts ex.inspect_with_backtrace 
-      puts "From Socket Address:" + socket.remote_address.to_s if socket.remote_address
+      if @debug
+        puts ex.inspect_with_backtrace 
+        puts "From Socket Address:" + socket.remote_address.to_s if socket.remote_address
+      end
     end
   end
 
 	def reader(socket : TCPSocket, processor : Processor)
 		line_count = 0
-    socket.read_timeout = 20
   	data = get_socket_data(socket)
     puts "Recieved: #{data}" if @debug
-		max_lines = @connections > 35 ? 10000 : 1000
+		max_lines = @connections > 35 ? 50 : 100
     while line_count < max_lines && data
 			if data && data.size > 5
 				line_count += 1
@@ -42,11 +43,11 @@ class Tcp
 	end
 
 	def spawn_listener(socket_channel : Channel)
-		40.times do
+		10.times do
       spawn do
         loop do
           socket = socket_channel.receive
-          socket.read_timeout = 20
+          socket.read_timeout = 3
 					@connections += 1
 					processor = Processor.new
 					reader(socket, processor)
