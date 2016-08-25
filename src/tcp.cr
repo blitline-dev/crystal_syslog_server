@@ -43,7 +43,7 @@ class Tcp
 	end
 
 	def spawn_listener(socket_channel : Channel)
-		10.times do
+		200.times do
       spawn do
         loop do
           socket = socket_channel.receive
