@@ -19,7 +19,7 @@ class Processor
   end
 
 	def split_data(data : String) : Hash(String, String)
-		segments = data.split(" ")
+		segments = data.split(" ", 8)
 		type_month = segments[0]
 		log_type = ""
     month = ""
