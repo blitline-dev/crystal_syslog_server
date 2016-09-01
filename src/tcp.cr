@@ -6,7 +6,7 @@ class Tcp
 
   TOTAL_FIBERS = 200
 
-  def initialize(@host : String, @port : Int32, @base_dir : String, @debug : Bool)
+  def initialize(@host : String, @port : Int32, @base_dir : String, @debug : Bool, @debug_type : Int32)
 		@action = Action.new(@base_dir, @debug)
 		@connections = 0
   end
@@ -15,6 +15,7 @@ class Tcp
     data = nil
     begin
       data = socket.gets
+      puts data if @debug_type == 1
     rescue ex
       # Move to @debug
       if @debug
@@ -25,7 +26,7 @@ class Tcp
   end
 
 	def reader(socket : TCPSocket, processor : Processor)
-  	data = get_socket_data(socket)
+  	data = get_socket_data(socket).to_s
 
     if data == "stats\n"
       stats_response(socket)
