@@ -21,7 +21,8 @@ class Processor
   end
 
   def split_data(data : String) : Hash(String, String) | ::Nil
-    segments = data.split(" ", 8).reject! {|s| s.nil? || s.empty?}
+    segments = data.split(" ", 8)
+    segments.reject! {|s| s.nil? || s.empty?}
     if segments.nil?
       return nil
     end

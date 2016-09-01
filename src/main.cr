@@ -11,7 +11,7 @@ end
 
 
 puts "Starting syslog server"
-puts "TCP listening on 0.0.0.0:#{port}"
+puts "TCP listening on #{listen}:#{port}"
 puts "Writing to #{cl_dir}"
 puts "Logging TCP-IN" if debug_type == 1
 server = Tcp.new(listen, port.to_i, cl_dir, debug, debug_type)
