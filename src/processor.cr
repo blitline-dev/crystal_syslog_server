@@ -9,8 +9,10 @@ class Processor
 
   def process(data : String) : Hash(String, String) | ::Nil
     begin
-      hash = split_data(data)
-      return hash
+      if data
+        hash = split_data(data)
+        return hash
+      end
     rescue ex
       puts ex.message
       puts ex.callstack
@@ -18,13 +20,10 @@ class Processor
     return nil
   end
 
-  def split_data(data : String) : Hash(String, String)
+  def split_data(data : String) : Hash(String, String) | ::Nil
     segments = data.split(" ", 8).reject! {|s| s.nil? || s.empty?}
     if segments.nil?
-      puts "Illegal values for splitting"
-      puts segments.inspect
-      puts "----------------------------"
-      return Hash(String,String).new 
+      return nil
     end
     type_month = segments[0]
     log_type = ""
