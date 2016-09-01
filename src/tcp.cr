@@ -15,7 +15,7 @@ class Tcp
     data = nil
     begin
       data = socket.gets
-      puts data if @debug_type == 1
+      puts data.to_s if @debug_type == 1
     rescue ex
       # Move to @debug
       if @debug
@@ -23,10 +23,11 @@ class Tcp
         puts "From Socket Address:" + socket.remote_address.to_s if socket.remote_address
       end
     end
+    return data
   end
 
 	def reader(socket : TCPSocket, processor : Processor)
-  	data = get_socket_data(socket).to_s
+  	data = get_socket_data(socket)
 
     if data == "stats\n"
       stats_response(socket)
