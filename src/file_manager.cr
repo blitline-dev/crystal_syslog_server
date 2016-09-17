@@ -47,11 +47,7 @@ class FileManager
       open_file = open_file(file_path)
       @files[file_path] = open_file
     end
-
-    if open_file.nil?
-      open_file = open_file(file_path)
-      @files[file_path] = open_file
-    end
+    
 		return open_file
 	end
 
@@ -86,6 +82,8 @@ class FileManager
 			result = false
 			filename = File.basename(k)
 			if filename < time
+        puts "Cleanup: Closing #{filename}"
+        v.file.flush
 				v.file.close
 				result = true
 			end
