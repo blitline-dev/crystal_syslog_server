@@ -20,6 +20,10 @@ class Action
 		build_channel(@channel)
 	end
 
+	def open_file_count
+		@file_manager.open_file_count
+	end
+
 	def setup_configs(file_watcher : FileWatcher)
 		# Events Config
     json_watcher = JSONFileWatcher.new(file_watcher, @debug)
@@ -41,9 +45,6 @@ class Action
        loop do
          data_hash = ch.receive
 				 if data_hash["facility"][0..4] == "local"
-				 		if data_hash["body"].starts_with?("Starting 2016")
-				 			puts "GOT! #{ data_hash["body"] }"
-				 		end
 					 	@file_manager.write_to_file(data_hash, nil) do |file|
 							handlle_output(data_hash, file)
 						end

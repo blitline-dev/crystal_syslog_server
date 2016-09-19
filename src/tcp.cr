@@ -4,7 +4,7 @@ require "./processor.cr"
 require "./action"
 class Tcp
 
-  TOTAL_FIBERS = 200
+  TOTAL_FIBERS = 120
 
   def initialize(@host : String, @port : Int32, @base_dir : String, @debug : Bool, @debug_type : Int32)
 		@action = Action.new(@base_dir, @debug)
@@ -56,7 +56,8 @@ class Tcp
       "debug" : @debug,
       "connections" : @connections,
       "port" :  @port,
-      "available" : TOTAL_FIBERS
+      "available" : TOTAL_FIBERS,
+      "open_file_count" : @action.open_file_count
     }
     socket.puts(data.to_json)
   end

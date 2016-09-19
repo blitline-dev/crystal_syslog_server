@@ -1,7 +1,6 @@
 require "file_utils"
 
-class FileManager
-
+class FileManager  
   class OpenFile
 		property file, buffer_size, last_written
     def initialize(file : File, buffer_size : Int32)
@@ -32,6 +31,10 @@ class FileManager
 		end
   end
 
+  def open_file_count
+    return @files.keys.size
+  end
+
 	def get_open_file(data_hash : Hash(String, String), event_name : String | Nil)
 		tag = verify_file_name(data_hash["tag"])
 		sub_path = tag
@@ -47,7 +50,7 @@ class FileManager
       open_file = open_file(file_path)
       @files[file_path] = open_file
     end
-    
+
 		return open_file
 	end
 
