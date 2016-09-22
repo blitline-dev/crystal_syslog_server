@@ -26,7 +26,7 @@ class FileWatcher
             @channel.send(file_data)
           end
         end
-        sleep 1
+        sleep 5
       end
     end
   end

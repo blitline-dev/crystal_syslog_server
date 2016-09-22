@@ -16,7 +16,7 @@ class Action
 		@events = Hash(String, JSON::Type).new
 		setup_configs(@file_watcher)
 		@file_manager = FileManager.new(@file_root)
-		@channel = Channel(Hash(String, String)).new
+		@channel = Channel::Buffered(Hash(String, String)).new
 		build_channel(@channel)
 	end
 
