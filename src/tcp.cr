@@ -4,7 +4,7 @@ require "./processor.cr"
 require "./action"
 class Tcp
 
-  TOTAL_FIBERS = 120
+  TOTAL_FIBERS = 20
 
   def initialize(@host : String, @port : Int32, @base_dir : String, @debug : Bool, @debug_type : Int32)
 		@action = Action.new(@base_dir, @debug)
@@ -17,7 +17,6 @@ class Tcp
       data = socket.gets
       puts data.to_s if @debug_type == 1
     rescue ex
-      # Move to @debug
       if @debug
         puts ex.inspect_with_backtrace 
         puts "From Socket Address:" + socket.remote_address.to_s if socket.remote_address
@@ -36,8 +35,6 @@ class Tcp
 
     puts "Recieved: #{data}" if @debug
     while data
-       
-
 			if data && data.size > 5
 				begin
 		  	  formatted_data = processor.process(data)
@@ -79,7 +76,7 @@ class Tcp
   end
 
   def listen
-		ch = Channel(TCPSocket).new
+		ch = Channel::Buffered(TCPSocket).new
 		server = TCPServer.new(@host, @port)
 
 		spawn_listener(ch)
