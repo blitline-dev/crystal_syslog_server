@@ -79,7 +79,7 @@ class Processor
     output["proc_id"] = proc_id
     output["msg_id"] = msg_id
     output["structured_data"] = structured_data
-    output["suid"] = SecureRandom.urlsafe_base64(8)
+    output["suid"] = atomic_counter
     output["ingestion_time"] = Time.now.to_s("%s")
     output["body"] = segments[body_start..-1].join(" ").strip
     fac_sev = TypeTable.define(log_type.to_i)
@@ -89,7 +89,7 @@ class Processor
   end
 
   def generate_unique_id
-    atomic_counter.to_s
+    atomic_counter
   end
 
   def atomic_counter
