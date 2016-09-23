@@ -30,6 +30,7 @@ class Tcp
   	data = get_socket_data(socket)
 
     if data == "stats\n"
+      p "Stats"
       stats_response(socket)
       return
     end
@@ -58,6 +59,7 @@ class Tcp
       "available" : TOTAL_FIBERS,
       "open_file_count" : @action.open_file_count
     }
+    p "Stats Response #{data}"
     socket.puts(data.to_json)
   end
 
@@ -65,13 +67,18 @@ class Tcp
 		TOTAL_FIBERS.times do
       spawn do
         loop do
-          socket = socket_channel.receive
-          socket.read_timeout = 3
-					@connections += 1
-					processor = Processor.new
-					reader(socket, processor)
-          socket.close
-					@connections -= 1
+          begin
+            socket = socket_channel.receive
+            socket.read_timeout = 3
+  					@connections += 1
+  					processor = Processor.new
+  					reader(socket, processor)
+            socket.close
+  					@connections -= 1
+          rescue ex
+            p "Error in spawn_listener"
+            p ex.message
+          end
         end
       end
     end

@@ -21,6 +21,7 @@ class FileManager
     # instead of waiting for the hour to end and flushing on 'close()'
     spawn do
       loop do
+        puts "Running check"
         @files.each do | key, open_file |
           flush_as_necessary(open_file)
         end
