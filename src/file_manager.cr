@@ -12,7 +12,32 @@ class FileManager
 
 	def initialize(@root_url : String)
   	@files = Hash(String,OpenFile).new
+    @channel = Channel(String).new
+    initialize_flusher
 	end
+
+  def initialize_flusher
+    # Makes sure logs that write a bunch, and then stop writing are flushed
+    # instead of waiting for the hour to end and flushing on 'close()'
+    spawn do
+      loop do
+        @files.each do | key, open_file |
+          flush_as_necessary(open_file)
+        end
+        sleep 120
+      end
+    end
+  end
+
+  def flush_as_necessary(open_file : OpenFile)
+    time_now = Time.now.epoch
+    if open_file.last_written < time_now - 120
+        # Forcing file flush for events that haven't
+        # written in over 2 minutes
+        open_file.file.flush
+    end
+    open_file.last_written = time_now
+  end
 
   def write_to_file(data_hash : Hash(String, String), event_name : String | Nil)
 		open_file = get_open_file(data_hash, event_name)
@@ -21,13 +46,7 @@ class FileManager
 		yield file
 
     unless event_name.nil?
-			time_now = Time.now.epoch
-			if open_file.last_written < time_now - 120
-					# Forcing file flush for events that haven't
-					# written in over 2 minutes
-					open_file.file.flush
-			end
- 			open_file.last_written = time_now
+      flush_as_necessary(open_file)
 		end
   end
 
