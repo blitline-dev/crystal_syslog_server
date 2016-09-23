@@ -93,7 +93,6 @@ class Processor
   end
 
   def atomic_counter
-    puts "#{@atomic_index}"
     @atomic_index += 1
     @atomic_index = 0 if @atomic_index > 50_000_000
     return @atomic_index
