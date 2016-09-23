@@ -79,7 +79,7 @@ class Processor
     output["proc_id"] = proc_id
     output["msg_id"] = msg_id
     output["structured_data"] = structured_data
-    output["suid"] = generate_unique_id
+    output["suid"] = SecureRandom.urlsafe_base64(8)
     output["ingestion_time"] = Time.now.to_s("%s")
     output["body"] = segments[body_start..-1].join(" ").strip
     fac_sev = TypeTable.define(log_type.to_i)
