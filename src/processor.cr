@@ -6,6 +6,9 @@ require "./type_table"
 class Processor
   LOOKUP_HASH = { "Jan" => 1, "Feb" => 2, "Mar" => 3, "Apr" => 4, "May" => 5, "Jun" => 6 , "Jul" => 7 , "Aug" => 8, "Sep" => 9,  "Oct" => 10, "Nov" => 11, "Dev" => 12}
   
+  def initialize
+    @atomic_index = 0
+  end
 
   def process(data : String) : Hash(String, String) | ::Nil
     begin
@@ -76,7 +79,7 @@ class Processor
     output["proc_id"] = proc_id
     output["msg_id"] = msg_id
     output["structured_data"] = structured_data
-    output["suid"] = SecureRandom.urlsafe_base64(8)
+    output["suid"] = generate_unique_id
     output["ingestion_time"] = Time.now.to_s("%s")
     output["body"] = segments[body_start..-1].join(" ").strip
     fac_sev = TypeTable.define(log_type.to_i)
@@ -84,6 +87,18 @@ class Processor
     output["severity"] = fac_sev[0].to_s
     return output
   end
+
+  def generate_unique_id
+    atomic_counter.to_s
+  end
+
+  def atomic_counter
+    puts "#{@atomic_index}"
+    @atomic_index += 1
+    @atomic_index = 0 if @atomic_index > 50_000_000
+    return @atomic_index
+  end
+
 
   def build_date(month : String, day : String , time : String)
     built_time = ""

@@ -10,6 +10,7 @@ class Tcp
 		@action = Action.new(@base_dir, @debug)
 		@connections = 0
     @version = ENV["CL_VERSION"]? || "0.0.0.0"
+    @processor = Processor.new
   end
 
   def get_socket_data(socket : TCPSocket)
@@ -71,8 +72,7 @@ class Tcp
             socket = socket_channel.receive
             socket.read_timeout = 3
   					@connections += 1
-  					processor = Processor.new
-  					reader(socket, processor)
+  					reader(socket, @processor)
             socket.close
   					@connections -= 1
           rescue ex
@@ -85,7 +85,7 @@ class Tcp
   end
 
   def listen
-		ch = Channel::Buffered(TCPSocket).new
+		ch = build_channel
 		server = TCPServer.new(@host, @port)
 
 		spawn_listener(ch)
@@ -94,5 +94,10 @@ class Tcp
   		ch.send socket
 		end
   end
+
+  def build_channel
+    Channel::Buffered(TCPSocket).new
+  end
+
 
 end
