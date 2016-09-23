@@ -9,6 +9,7 @@ class Tcp
   def initialize(@host : String, @port : Int32, @base_dir : String, @debug : Bool, @debug_type : Int32)
 		@action = Action.new(@base_dir, @debug)
 		@connections = 0
+    @version = ENV["CL_VERSION"]? || "0.0.0.0"
   end
 
   def get_socket_data(socket : TCPSocket)
@@ -50,6 +51,7 @@ class Tcp
 
   def stats_response(socket : TCPSocket)
     data = {
+      "version" : @version,
       "debug" : @debug,
       "connections" : @connections,
       "port" :  @port,
