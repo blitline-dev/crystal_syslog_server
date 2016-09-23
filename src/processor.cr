@@ -79,17 +79,13 @@ class Processor
     output["proc_id"] = proc_id
     output["msg_id"] = msg_id
     output["structured_data"] = structured_data
-    output["suid"] = atomic_counter
+    output["suid"] = atomic_counter.to_s
     output["ingestion_time"] = Time.now.to_s("%s")
     output["body"] = segments[body_start..-1].join(" ").strip
     fac_sev = TypeTable.define(log_type.to_i)
     output["facility"] = fac_sev[1].to_s
     output["severity"] = fac_sev[0].to_s
     return output
-  end
-
-  def generate_unique_id
-    atomic_counter
   end
 
   def atomic_counter
