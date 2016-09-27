@@ -5,6 +5,7 @@ stats_port = ENV["CL_STATS_TCP_PORT"]? || "6770"
 cl_dir = ENV["CL_BASE_DIR"]? || "/var/log/commonlogs"
 listen = ENV["CL_LISTEN"]? || "0.0.0.0"
 debug = ENV["CL_DEBUG"]?.to_s == "true"
+
 debug_type = 0
 if ENV["CL_DEBUG_TYPE"]? && ENV["CL_DEBUG_TYPE"].to_i > 0
   debug_type = ENV["CL_DEBUG_TYPE"].to_i

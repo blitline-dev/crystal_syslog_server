@@ -5,7 +5,9 @@ require "./type_table"
 
 class Processor
   LOOKUP_HASH = { "Jan" => 1, "Feb" => 2, "Mar" => 3, "Apr" => 4, "May" => 5, "Jun" => 6 , "Jul" => 7 , "Aug" => 8, "Sep" => 9,  "Oct" => 10, "Nov" => 11, "Dev" => 12}
-  
+  TOKEN = ENV["CL_TOKEN"]?
+  TAG_TOKENIZER = ">"
+
   def initialize
     @atomic_index = 0
   end
@@ -17,8 +19,12 @@ class Processor
         return hash
       end
     rescue ex
-      puts ex.message
-      puts ex.callstack
+      if ex.message.to_s.includes?("Illegal Token")
+        puts ex.message
+      else
+        puts ex.message
+        puts ex.callstack
+      end
     end
     return nil
   end
@@ -75,7 +81,7 @@ class Processor
     output = Hash(String, String).new
     output["log_local_time"] = time.to_s("%s")
     output["host"] = hostname
-    output["tag"] = tag
+    output["tag"] = validate_tag(tag)
     output["proc_id"] = proc_id
     output["msg_id"] = msg_id
     output["structured_data"] = structured_data
@@ -92,6 +98,17 @@ class Processor
     @atomic_index += 1
     @atomic_index = 0 if @atomic_index > 50_000_000
     return @atomic_index
+  end
+
+  def validate_tag(tag)
+    if TOKEN
+      tokenizer = tag.split(TAG_TOKENIZER)
+      if tokenizer[0] != TOKEN
+        raise "Illegal Token #{tag}"
+      end
+      return tokenizer[1]
+    end
+    return tag
   end
 
 
