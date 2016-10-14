@@ -36,7 +36,7 @@ class Processor
       return nil
     end
     type_month = segments[0]
-    if type_month[0] != "<"
+    if type_month[0] != '<'
       # Sometimes syslog messages have their length at the beginning of the message
       segments.delete_at(0)
       type_month = segments[0]
