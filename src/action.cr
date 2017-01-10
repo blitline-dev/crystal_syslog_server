@@ -42,15 +42,20 @@ class Action
 
 	private def build_channel(ch : Channel(Hash(String, String)))
 		spawn do
-       loop do
-         data_hash = ch.receive
-				 if data_hash["facility"][0..4] == "local"
-					 	@file_manager.write_to_file(data_hash, nil) do |file|
-							handlle_output(data_hash, file)
-						end
-			     check_events(data_hash)
-				 end
-       end
+			  begin
+	        loop do
+	          data_hash = ch.receive
+					  if data_hash["facility"][0..4] == "local"
+						  @file_manager.write_to_file(data_hash, nil) do |file|
+								handlle_output(data_hash, file)
+							end
+				      check_events(data_hash)
+					 	end
+	       	end
+	      rescue ex
+	      	p "Error in action:loop!"
+      		p ex.message
+	      end
      end
 	end
 

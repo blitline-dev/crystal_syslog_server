@@ -89,10 +89,15 @@ class Tcp
 		server = TCPServer.new(@host, @port)
 
 		spawn_listener(ch)
-		loop do
-  		socket = server.accept
-  		ch.send socket
-		end
+    begin
+  		loop do
+    		socket = server.accept
+    		ch.send socket
+  		end
+    rescue ex
+      p "Error in tcp:loop!"
+      p ex.message
+    end
   end
 
   def build_channel
