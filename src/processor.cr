@@ -59,6 +59,7 @@ class Processor
     end
 
     if version_one
+
       iso_date_string = segments[1]
       begin
         time = Time.parse(iso_date_string, "%Y-%m-%dT%H:%M:%S", Time::Kind::Utc)
@@ -79,9 +80,22 @@ class Processor
         month = m[1] if m
       end
       hostname = segments[3]
-      tag = segments[4]
-      body_start = 5
-      time = build_date(month, segments[1], segments[2])
+
+      if hostname.includes?('/')
+        # Syslog Style
+        hostname, tag = hostname.split('/')
+        tag.match(/(.*)\[.*\]:$/) do |t|
+          tag = t[1] if t
+        end
+        body = segments[4]
+        body_start = 4
+        time = build_date(month, segments[1], segments[2])
+      else
+        # Rsyslog Style
+        tag = segments[4]
+        body_start = 5
+        time = build_date(month, segments[1], segments[2])
+      end
     end
 
     output = Hash(String, String).new
