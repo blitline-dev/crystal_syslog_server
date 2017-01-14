@@ -45,7 +45,7 @@ class Action
 			  begin
 	        loop do
 	          data_hash = ch.receive
-					  if data_hash["facility"][0..4] == "local" || data_hash["facility"][0..5] == "system"
+					  if data_hash["facility"][0..4] == "local"
 						  @file_manager.write_to_file(data_hash, nil) do |file|
 								handlle_output(data_hash, file)
 							end
