@@ -138,9 +138,6 @@ class Processor
 
     output["body"] = segments.join(" ").strip
 
-    puts "-" * 90
-    puts output.inspect
-    puts "-" * 90
     output["suid"] = atomic_counter.to_s
     output["ingestion_time"] = Time.now.to_s("%s")
     return output
@@ -164,7 +161,6 @@ class Processor
 
   def split_data(data : String) : Hash(String, String)
     type_and_data = determine_format(data)
-    puts type_and_data.inspect
     log_type = type_and_data.keys[0]
     log_data = type_and_data[log_type]
     
