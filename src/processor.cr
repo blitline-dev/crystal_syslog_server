@@ -25,7 +25,6 @@ class Processor
         if hash.empty?
           return Hash(String, String).new
         end
-
         return hash
       end
     rescue ex
@@ -45,7 +44,7 @@ class Processor
     first_segments = pre_amble.split(" ", 8)
     first_segments.reject! {|s| s.nil? || s.empty?}
     if first_segments.nil?
-      raise "First segment nil!!!"
+      raise "First segment nil!!! data=#{data}"
     end
 
     if first_segments[0].includes?("<")
