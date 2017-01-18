@@ -27,7 +27,7 @@ class Action
 	def setup_configs(file_watcher : FileWatcher)
 		# Events Config
     json_watcher = JSONFileWatcher.new(file_watcher, @debug)
-    r = Proc(Hash(String, JSON::Type), Nil).new { |x| @events = x["events"] as Hash(String, JSON::Type) }
+    r = Proc(Hash(String, JSON::Type), Nil).new { |x| @events = x["events"].as(Hash(String, JSON::Type)) }
 		filepath = "#{@file_root}/events.json"
 		data = "{ \"events\" : {} }"
 		File.write(filepath, data) unless File.exists?(filepath)
@@ -46,6 +46,7 @@ class Action
 	        loop do
 	          data_hash = ch.receive
 					  if data_hash["facility"][0..4] == "local"
+		          
 						  @file_manager.write_to_file(data_hash, nil) do |file|
 								handlle_output(data_hash, file)
 							end
@@ -66,12 +67,13 @@ class Action
     tag = data_hash["tag"]
     body = data_hash["body"]
 
+    puts "Writing to file #{data_hash.to_s}" if @debug
     file.puts("#{time} #{suid} #{host} #{tag} #{body}")
 	end
 
 	private def check_events(data_hash)
 		tag = data_hash[TAG]
-		events_for_tag = @events[tag]? as Hash(String, JSON::Type) | Nil
+		events_for_tag = @events[tag]?.as(Hash(String, JSON::Type) | Nil)
 		return unless events_for_tag
 
 		puts "Checking Events..." if @debug
@@ -92,7 +94,9 @@ class Action
 	private def handle_find(data_hash : Hash(String, String), find : String, name : String, is_regex : Bool)
 		if is_regex
 			regex = Regex.new(find)
-			data_hash[EVENT_BODY].match(regex) do
+			
+			md = data_hash[EVENT_BODY].match(regex)
+			if md
 				write_event(data_hash, name)
 			end
 		else

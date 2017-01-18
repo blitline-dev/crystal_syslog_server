@@ -1,4 +1,3 @@
-require "openssl" ifdef !without_openssl
 require "socket"
 require "./processor.cr"
 require "./action"

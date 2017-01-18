@@ -2,11 +2,12 @@ require "file_utils"
 
 class FileManager  
   class OpenFile
-		property file, buffer_size, last_written
+		property file : File, buffer_size : Int32, last_written : Int64
     def initialize(file : File, buffer_size : Int32)
+      @last_written  = Int64.new(0)
 			@file = file
 			@buffer_size = buffer_size
-			@last_written = Time.now.epoch as Int64
+			@last_written = Time.utc_ticks
     end
   end
 
@@ -118,7 +119,7 @@ class FileManager
   end
 
 	def process_run(cmd : String)
-		io = MemoryIO.new
+		io = IO::Memory.new
 		Process.run(cmd, shell: true, output: io)
 		output = io.to_s
 	end

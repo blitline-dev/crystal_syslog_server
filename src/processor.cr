@@ -1,25 +1,36 @@
 require "./type_table"
-# ["<134>Aug", "13", "00:27:32", "nat", "shake@nat", "Tell", "him", "I'll", "send", "Duke", "Edmund", "to", "the", "Tower-\\n"]
-# {"log_local_time" => "2016-08-14 00:30:58", "ingestion_time" => "2016-08-14 00:30:54 +0000",
-#  "body" => "ANTONY. Moon and stars!", "facility" => "local0", "severity" => "6"}
+# Syslog:
+# <134>Jan 16 21:07:33 cedis-1 cedis[1072]: jj6GZ LCREATE list:0W19rxER7il4KtrCsDCOcQg
+# Micro:
+# 101 <134>1 2017-01-16T21:08:43.287929Z cedis-1 cedis 1072 cedis jj6GZ GETINT int:7N5_Ot_unayZ07ASfqQvYgg
+# Rsyslog_full:
+# 73 <134>1 2017-01-16T21:09:32Z cedis-1 cedis 1072 cedis Index out of bounds
+# Rsyslog_plus:
+# <134>Jan 16 21:13:32 cedis-1 cedis jj6GZ DECR int:1hbE8qxgL5ngpcWc3EdQ6nw 1
 
 class Processor
   LOOKUP_HASH = { "Jan" => 1, "Feb" => 2, "Mar" => 3, "Apr" => 4, "May" => 5, "Jun" => 6 , "Jul" => 7 , "Aug" => 8, "Sep" => 9,  "Oct" => 10, "Nov" => 11, "Dec" => 12}
   TOKEN = ENV["CL_TOKEN"]?
   TAG_TOKENIZER = ">"
+  VERSIONS = [:syslog, :rsyslog_micro, :rsyslog_full, :rsyslog_plus]
 
   def initialize
     @atomic_index = 0
   end
 
-  def process(data : String) : Hash(String, String) | ::Nil
+  def process(data : String) : Hash(String, String) | Nil
     begin
       if data
         hash = split_data(data)
+        if hash.empty?
+          return Hash(String, String).new
+        end
+
         return hash
       end
     rescue ex
       if ex.message.to_s.includes?("Illegal Token")
+        puts "DATA=#{data}"
         puts ex.message
       else
         puts ex.message
@@ -29,88 +40,114 @@ class Processor
     return nil
   end
 
-  def split_data(data : String) : Hash(String, String) | ::Nil
-    segments = data.split(" ", 8)
-    segments.reject! {|s| s.nil? || s.empty?}
-    if segments.nil?
-      return nil
-    end
-    type_month = segments[0]
-    if type_month[0] != '<'
-      # Sometimes syslog messages have their length at the beginning of the message
-      segments.delete_at(0)
-      type_month = segments[0]
+  def determine_format(data : String) : Hash(Symbol, Array(String))
+    pre_amble = data
+    first_segments = pre_amble.split(" ", 8)
+    first_segments.reject! {|s| s.nil? || s.empty?}
+    if first_segments.nil?
+      raise "First segment nil!!!"
     end
 
-    log_type = ""
-    month = ""
-    hostname = ""
-    tag = ""
-    proc_id = ""
-    msg_id = ""
-    structured_data = ""
-
-    body_start = 5
-
-    version_one = false
-    type_month.match(/<([0-9]*)>(1?)/) do |m|
-      log_type = m[1] if m
-      version_one = true if m[2] == "1"
+    if first_segments[0].includes?("<")
+      # Starts with '<134>Jan 16 21:07:33'
+      # primitive or rsyslog
+      if first_segments[4].includes?("[")
+        return { :primitive => first_segments }
+      else
+        return { :rsyslog => first_segments }
+      end
+    else
+      # Starts with '123 <134>Jan 16 21:07:33'
+      # micro or rsyslog_full
+      first_segments.shift # Delete first integer
+      if first_segments[2].includes?(".")
+        return { :rsyslog_micro => first_segments }
+      else
+        return { :rsyslog_full => first_segments }
+      end
     end
+  end
 
-    if version_one
+  def get_facility_from_segment(segment : String)
+    facility = "unknown"
+    md = segment.match(/<([0-9]*)>(1?)/) 
+    if md
+      facility = TypeTable.define(md[1].to_i)
+    else
+      raise "Failed facility #{segment}"
+    end
+    return facility
+  end
 
-      iso_date_string = segments[1]
+  def get_timestamp_from_segment(segments : Array(String))
+    segment = segments[0]
+    md = segment.match(/>([a-zA-Z].*)/) 
+    segments.shift
+    if md
+      month = md[1] 
+      time = build_date(month, segments[1], segments[2])
+      segments.shift(2)
+    else
+      # New Timestamp format
       begin
-        time = Time.parse(iso_date_string, "%Y-%m-%dT%H:%M:%S", Time::Kind::Utc)
+        time = Time.parse(segment, "%Y-%m-%dT%H:%M:%S", Time::Kind::Utc)
       rescue bs
         puts bs.inspect_with_backtrace
         time = Time.now
       end
-      hostname = segments[2]
-      tag = segments[3]
-
-      proc_id = segments[4]
-      msg_id = segments[5]
-      structured_data = segments[6]
-
-      body_start = 7
-    else
-      type_month.match(/>(.*)/) do |m|
-        month = m[1] if m
-      end
-      hostname = segments[3]
-
-      if hostname.includes?('/')
-        # Syslog Style
-        hostname, tag = hostname.split('/')
-        tag.match(/(.*)\[.*\]:$/) do |t|
-          tag = t[1] if t
-        end
-        body = segments[4]
-        body_start = 4
-        time = build_date(month, segments[1], segments[2])
-      else
-        # Rsyslog Style
-        tag = segments[4]
-        body_start = 5
-        time = build_date(month, segments[1], segments[2])
-      end
+      segments.shift
     end
+    return time
+  end
 
+
+  def normalize(segments : Array(String)) : Hash(String, String)
     output = Hash(String, String).new
-    output["log_local_time"] = time.to_s("%s")
-    output["host"] = hostname
-    output["tag"] = validate_tag(tag)
-    output["proc_id"] = proc_id
-    output["msg_id"] = msg_id
-    output["structured_data"] = structured_data
-    output["suid"] = atomic_counter.to_s
-    output["ingestion_time"] = Time.now.to_s("%s")
-    output["body"] = segments[body_start..-1].join(" ").strip
-    fac_sev = TypeTable.define(log_type.to_i)
+    segment = segments[0]
+    # Determine Fac/Sev
+    fac_sev = get_facility_from_segment(segment)
     output["facility"] = fac_sev[1].to_s
     output["severity"] = fac_sev[0].to_s
+    # Determine Time
+    time = get_timestamp_from_segment(segments)
+    output["log_local_time"] = time.to_s("%s")
+
+    output["host"] = segments[0]
+    segments.shift
+
+    output["tag"] = validate_tag(segments[0])
+    segments.shift
+
+    output["body"] = segments.join(" ").strip
+    output["suid"] = atomic_counter.to_s
+    output["ingestion_time"] = Time.now.to_s("%s")
+    return output
+  end
+
+
+
+  def normalize_data(log_type : Symbol, segments : Array(String) ) : Hash(String, String)
+    output = Hash(String, String).new
+    case log_type
+    when :primitive 
+      output = normalize(segments)
+    when :rsyslog
+      output = normalize(segments)
+    when :rsyslog_micro
+      output = normalize(segments)
+    when :rsyslog_full
+      output = normalize(segments)
+    end
+
+    return output
+  end
+
+  def split_data(data : String) : Hash(String, String)
+    type_and_data = determine_format(data)
+    log_type = type_and_data.keys[0]
+    log_data = type_and_data[log_type]
+
+    output = normalize_data(log_type, log_data)
     return output
   end
 
