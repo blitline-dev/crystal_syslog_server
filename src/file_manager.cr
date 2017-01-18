@@ -4,12 +4,10 @@ class FileManager
   class OpenFile
 		property file : File, buffer_size : Int32, last_written : Int64
     def initialize(file : File, buffer_size : Int32)
-      p "here"
       @last_written  = Int64.new(0)
 			@file = file
 			@buffer_size = buffer_size
 			@last_written = Time.utc_ticks
-      p "good"
     end
   end
 
