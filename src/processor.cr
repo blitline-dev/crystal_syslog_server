@@ -85,11 +85,13 @@ class Processor
     segments.shift
     if md
       month = md[1] 
-      time = build_date(month, segments[1], segments[2])
+      time = build_date(month, segments[0], segments[1])
       segments.shift(2)
     else
       # New Timestamp format
       begin
+        segment = segments[0]
+        p "time segment = #{segment}"
         time = Time.parse(segment, "%Y-%m-%dT%H:%M:%S", Time::Kind::Utc)
       rescue bs
         puts bs.inspect_with_backtrace
@@ -108,23 +110,41 @@ class Processor
     fac_sev = get_facility_from_segment(segment)
     output["facility"] = fac_sev[1].to_s
     output["severity"] = fac_sev[0].to_s
+
     # Determine Time
     time = get_timestamp_from_segment(segments)
     output["log_local_time"] = time.to_s("%s")
 
     output["host"] = segments[0]
     segments.shift
-
+    if output["host"].includes?("/")
+      host_tag = output["host"].split("/")
+      host = host_tag[0]
+      output["host"] = host_tag[0]
+      segments.unshift(host_tag[1])
+    end
     output["tag"] = validate_tag(segments[0])
     segments.shift
+    if output["tag"].includes?("[")
+      md = segment.match(/\[([0-9])\]/)
+      if md
+        output["proc_id"] = md[0]
+      end
+      output["tag"] = output["tag"].split("[")[0]
+    end
+    segments.shift if segments[0] == "-"
+    segments.shift if segments[0] == "-"
+    segments.shift if segments[0] == "-"
 
     output["body"] = segments.join(" ").strip
+
+    puts "-" * 90
+    puts output.inspect
+    puts "-" * 90
     output["suid"] = atomic_counter.to_s
     output["ingestion_time"] = Time.now.to_s("%s")
     return output
   end
-
-
 
   def normalize_data(log_type : Symbol, segments : Array(String) ) : Hash(String, String)
     output = Hash(String, String).new
@@ -144,8 +164,10 @@ class Processor
 
   def split_data(data : String) : Hash(String, String)
     type_and_data = determine_format(data)
+    puts type_and_data.inspect
     log_type = type_and_data.keys[0]
     log_data = type_and_data[log_type]
+    
 
     output = normalize_data(log_type, log_data)
     return output
