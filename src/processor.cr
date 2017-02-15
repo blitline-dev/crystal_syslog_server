@@ -33,6 +33,7 @@ class Processor
         puts ex.message
       else
         puts "In process:"
+        puts "DATA=#{data}"
         puts ex.message
         puts ex.callstack
       end
