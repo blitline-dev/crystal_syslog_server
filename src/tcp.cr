@@ -19,8 +19,8 @@ class Tcp
       puts data.to_s if @debug_type == 1
     rescue ex
       if @debug
-        puts ex.inspect_with_backtrace 
         puts "From Socket Address:" + socket.remote_address.to_s if socket.remote_address
+        puts ex.inspect_with_backtrace 
       end
     end
     return data

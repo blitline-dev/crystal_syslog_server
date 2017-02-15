@@ -32,6 +32,7 @@ class Processor
         puts "DATA=#{data}"
         puts ex.message
       else
+        puts "In process:"
         puts ex.message
         puts ex.callstack
       end
@@ -92,6 +93,7 @@ class Processor
         segment = segments[0]
         time = Time.parse(segment, TIME_SEGMENT, Time::Kind::Utc)
       rescue bs
+        puts "In get_timestamp_from_segment:"
         puts bs.inspect_with_backtrace
         time = Time.now
       end
