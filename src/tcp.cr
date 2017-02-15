@@ -29,7 +29,7 @@ class Tcp
 	def reader(socket : TCPSocket, processor : Processor)
   	data = get_socket_data(socket)
 
-    if data == "stats\n"
+    if data.to_s[0..4] == "stats"
       p "Stats"
       stats_response(socket)
       return

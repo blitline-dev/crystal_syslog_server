@@ -13,7 +13,7 @@ class Processor
   TOKEN = ENV["CL_TOKEN"]?
   TAG_TOKENIZER = ">"
   VERSIONS = [:syslog, :rsyslog_micro, :rsyslog_full, :rsyslog_plus]
-
+  TIME_SEGMENT = "%Y-%m-%dT%H:%M:%S"
   def initialize
     @atomic_index = 0
   end
@@ -90,8 +90,7 @@ class Processor
       # New Timestamp format
       begin
         segment = segments[0]
-        p "time segment = #{segment}"
-        time = Time.parse(segment, "%Y-%m-%dT%H:%M:%S", Time::Kind::Utc)
+        time = Time.parse(segment, TIME_SEGMENT, Time::Kind::Utc)
       rescue bs
         puts bs.inspect_with_backtrace
         time = Time.now

@@ -32,11 +32,7 @@ class FileManager
 
   def flush_as_necessary(open_file : OpenFile)
     time_now = Time.now.epoch
-    if open_file.last_written < time_now - 120
-        # Forcing file flush for events that haven't
-        # written in over 2 minutes
-        open_file.file.flush
-    end
+    open_file.file.flush
     open_file.last_written = time_now
   end
 
