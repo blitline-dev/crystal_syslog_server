@@ -140,6 +140,10 @@ class Processor
       segments.unshift(host_tag[1])
     end
     output.tag = validate_tag(segments[0])
+    output.suid = atomic_counter.to_s
+    output.ingestion_time = Time.now.to_s("%s")
+
+    # Handle other optional items
     return output if segments.size == 0
     segments.shift
     if output.tag.includes?("[")
@@ -156,11 +160,8 @@ class Processor
     return output if segments.size == 0
     segments.shift if segments[0] == "-"
     return output if segments.size == 0
-
     output.body = segments.join(" ").strip
 
-    output.suid = atomic_counter.to_s
-    output.ingestion_time = Time.now.to_s("%s")
     return output
   end
 
