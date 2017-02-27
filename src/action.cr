@@ -69,7 +69,7 @@ class Action
     tag = data_hash["tag"]
     body = data_hash["body"]
 
-    @host_mru.add(host)
+    @host_mru.add("#{host}:'#{tag}'")
     puts "Writing to file #{data_hash.to_s}" if @debug
     file.puts("#{time} #{suid} #{host} #{tag} #{body}")
 	end
