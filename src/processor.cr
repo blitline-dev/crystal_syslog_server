@@ -7,6 +7,7 @@ require "./type_table"
 # 73 <134>1 2017-01-16T21:09:32Z cedis-1 cedis 1072 cedis Index out of bounds
 # Rsyslog_plus:
 # <134>Jan 16 21:13:32 cedis-1 cedis jj6GZ DECR int:1hbE8qxgL5ngpcWc3EdQ6nw 1
+# <134>Feb 27 00:54:37 ip-10-61-214-99 docker_king[1129]:
 
 struct SyslogData
   EMPTY = ""
@@ -139,6 +140,7 @@ class Processor
       segments.unshift(host_tag[1])
     end
     output.tag = validate_tag(segments[0])
+    return output if segments.size == 0
     segments.shift
     if output.tag.includes?("[")
       md = segment.match(/\[([0-9])\]/)
@@ -147,9 +149,13 @@ class Processor
       end
       output.tag = output.tag.split("[")[0]
     end
+    return output if segments.size == 0
     segments.shift if segments[0] == "-"
+    return output if segments.size == 0
     segments.shift if segments[0] == "-"
+    return output if segments.size == 0
     segments.shift if segments[0] == "-"
+    return output if segments.size == 0
 
     output.body = segments.join(" ").strip
 
@@ -161,7 +167,7 @@ class Processor
   def normalize_data(log_type : Symbol, segments : Array(String) ) : SyslogData
     output = SyslogData.new
     case log_type
-    when :primitive 
+    when :primitive
       output = normalize(segments)
     when :rsyslog
       output = normalize(segments)
