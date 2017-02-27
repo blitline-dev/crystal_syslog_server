@@ -55,7 +55,7 @@ class Action
 			      check_events(data_hash)
 				 	end
 	      rescue ex
-	      	p "Error in action:loop!"
+	      	p "Error in action:loop! #{data_hash.inspect}"
       		p ex.message
 	      end
      	end
