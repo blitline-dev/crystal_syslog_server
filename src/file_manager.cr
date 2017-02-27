@@ -36,7 +36,7 @@ class FileManager
     open_file.last_written = time_now
   end
 
-  def write_to_file(data_hash : Hash(String, String), event_name : String | Nil)
+  def write_to_file(data_hash : SyslogData, event_name : String | Nil)
 		open_file = get_open_file(data_hash, event_name)
     file = open_file.file
 
@@ -51,14 +51,14 @@ class FileManager
     return @files.keys.size
   end
 
-	def get_open_file(data_hash : Hash(String, String), event_name : String | Nil)
-		tag = verify_file_name(data_hash["tag"])
+	def get_open_file(data_hash : SyslogData, event_name : String | Nil)
+		tag = verify_file_name(data_hash.tag)
 		sub_path = tag
 		if event_name
 			event_name = verify_file_name(event_name)
 			sub_path = "#{tag}/events/#{event_name}"
 		end
-		time = data_hash["ingestion_time"]
+		time = data_hash.ingestion_time
     file_path = build_file_path(sub_path, time)
 
     open_file = @files[file_path]?

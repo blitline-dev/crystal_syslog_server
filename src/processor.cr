@@ -9,14 +9,19 @@ require "./type_table"
 # <134>Jan 16 21:13:32 cedis-1 cedis jj6GZ DECR int:1hbE8qxgL5ngpcWc3EdQ6nw 1
 
 struct SyslogData
-  property facility
-  property severity
-  property log_local_time
-  property host
-  property tag
-  property body
-  property suid
-  property ingestion_time
+  EMPTY = ""
+  property facility : String
+  property severity : String
+  property log_local_time : String
+  property host : String
+  property tag : String
+  property body : String
+  property suid : String
+  property ingestion_time : String
+  property proc_id : String
+
+  def initialize(@facility=EMPTY, @severity=EMPTY, @log_local_time=EMPTY, @host=EMPTY, @tag=EMPTY, @body=EMPTY, @suid=EMPTY, @ingestion_time=EMPTY,@proc_id=EMPTY)
+  end
 end
 
 class Processor
@@ -29,13 +34,10 @@ class Processor
     @atomic_index = 0
   end
 
-  def process(data : String) : Hash(String, String) | Nil
+  def process(data : String) : SyslogData | Nil
     begin
       if data
         hash = split_data(data)
-        if hash.empty?
-          return Hash(String, String).new
-        end
         return hash
       end
     rescue ex
@@ -115,48 +117,49 @@ class Processor
   end
 
 
-  def normalize(segments : Array(String)) : Hash(String, String)
-    output = Hash(String, String).new
+  def normalize(segments : Array(String)) : SyslogData
+    output = SyslogData.new
+
     segment = segments[0]
     # Determine Fac/Sev
     fac_sev = get_facility_from_segment(segment)
-    output["facility"] = fac_sev[1].to_s
-    output["severity"] = fac_sev[0].to_s
+    output.facility = fac_sev[1].to_s
+    output.severity = fac_sev[0].to_s
 
     # Determine Time
     time = get_timestamp_from_segment(segments)
-    output["log_local_time"] = time.to_s("%s")
+    output.log_local_time = time.to_s("%s")
 
-    output["host"] = segments[0]
+    output.host = segments[0]
     segments.shift
-    if output["host"].includes?("/")
-      host_tag = output["host"].split("/")
+    if output.host.includes?("/")
+      host_tag = output.host.split("/")
       host = host_tag[0]
-      output["host"] = host_tag[0]
+      output.host = host_tag[0]
       segments.unshift(host_tag[1])
     end
-    output["tag"] = validate_tag(segments[0])
+    output.tag = validate_tag(segments[0])
     segments.shift
-    if output["tag"].includes?("[")
+    if output.tag.includes?("[")
       md = segment.match(/\[([0-9])\]/)
       if md
-        output["proc_id"] = md[0]
+        output.proc_id = md[0]
       end
-      output["tag"] = output["tag"].split("[")[0]
+      output.tag = output.tag.split("[")[0]
     end
     segments.shift if segments[0] == "-"
     segments.shift if segments[0] == "-"
     segments.shift if segments[0] == "-"
 
-    output["body"] = segments.join(" ").strip
+    output.body = segments.join(" ").strip
 
-    output["suid"] = atomic_counter.to_s
-    output["ingestion_time"] = Time.now.to_s("%s")
+    output.suid = atomic_counter.to_s
+    output.ingestion_time = Time.now.to_s("%s")
     return output
   end
 
-  def normalize_data(log_type : Symbol, segments : Array(String) ) : Hash(String, String)
-    output = Hash(String, String).new
+  def normalize_data(log_type : Symbol, segments : Array(String) ) : SyslogData
+    output = SyslogData.new
     case log_type
     when :primitive 
       output = normalize(segments)
@@ -171,7 +174,7 @@ class Processor
     return output
   end
 
-  def split_data(data : String) : Hash(String, String)
+  def split_data(data : String) : SyslogData
     type_and_data = determine_format(data)
     log_type = type_and_data.keys[0]
     log_data = type_and_data[log_type]
