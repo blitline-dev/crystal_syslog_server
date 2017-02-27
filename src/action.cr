@@ -2,6 +2,7 @@ require "secure_random"
 require "json"
 require "./file_manager"
 require "./json_file_watcher"
+require "./string_mru"
 
 class Action
 	EVENT_CONFIG_NAME = "event_name"
@@ -12,12 +13,14 @@ class Action
 	TAG = "tag"
 
 	def initialize(@file_root : String, @debug : Bool)
+    @host_mru = StringMru.new(782400_i64, "#{@file_root}/hosts")
 		@file_watcher = FileWatcher.new
 		@events = Hash(String, JSON::Type).new
 		setup_configs(@file_watcher)
 		@file_manager = FileManager.new(@file_root)
 		@channel = Channel::Buffered(Hash(String, String)).new
 		build_channel(@channel)
+
 	end
 
 	def open_file_count
@@ -66,6 +69,7 @@ class Action
     tag = data_hash["tag"]
     body = data_hash["body"]
 
+    @host_mru.add(host)
     puts "Writing to file #{data_hash.to_s}" if @debug
     file.puts("#{time} #{suid} #{host} #{tag} #{body}")
 	end
