@@ -11,6 +11,8 @@ class Action
 	EVENT_CONFIG_REPLACE = "replace"
 	EVENT_BODY = "body"
 	TAG = "tag"
+  PRIV_TOKEN = ENV["CL_PRIV_TOKEN"]? || ""
+  PRIV_TOKEN_SIZE = PRIV_TOKEN.size + 1
 
 	def initialize(@file_root : String, @debug : Bool)
     @host_mru = StringMru.new(782400_i64, "#{@file_root}/hosts")
@@ -20,7 +22,8 @@ class Action
 		@file_manager = FileManager.new(@file_root)
 		@channel = Channel::Buffered(SyslogData).new
 		build_channel(@channel)
-
+    @sec = !PRIV_TOKEN.blank?
+    puts "Secure = #{@sec}"
 	end
 
 	def open_file_count
@@ -38,8 +41,12 @@ class Action
 	end
 
 	def process(data : SyslogData | ::Nil)
-		puts "Action is processing #{data}" if @debug
+    puts "Action is processing #{data}" if @debug    
 		return unless data
+    if @sec
+      return unless data.tag.starts_with?(PRIV_TOKEN)
+      data.tag = data.tag.byte_slice(PRIV_TOKEN_SIZE)
+    end
 		@channel.send data
 	end
 
