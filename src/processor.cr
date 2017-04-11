@@ -28,7 +28,7 @@ end
 class Processor
   LOOKUP_HASH = { "Jan" => 1, "Feb" => 2, "Mar" => 3, "Apr" => 4, "May" => 5, "Jun" => 6 , "Jul" => 7 , "Aug" => 8, "Sep" => 9,  "Oct" => 10, "Nov" => 11, "Dec" => 12}
   TOKEN = ENV["CL_TOKEN"]?
-  TAG_TOKENIZER = ">"
+  TAG_TOKENIZER = "."
   VERSIONS = [:syslog, :rsyslog_micro, :rsyslog_full, :rsyslog_plus]
   TIME_SEGMENT = "%Y-%m-%dT%H:%M:%S"
   def initialize
