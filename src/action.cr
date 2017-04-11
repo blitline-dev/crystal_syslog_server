@@ -15,6 +15,7 @@ class Action
   PRIV_TOKEN_SIZE = PRIV_TOKEN.size + 1
 
 	def initialize(@file_root : String, @debug : Bool)
+    @sec = !PRIV_TOKEN.blank?
     @host_mru = StringMru.new(782400_i64, "#{@file_root}/hosts")
 		@file_watcher = FileWatcher.new
 		@events = Hash(String, JSON::Type).new
@@ -22,7 +23,6 @@ class Action
 		@file_manager = FileManager.new(@file_root)
 		@channel = Channel::Buffered(SyslogData).new
 		build_channel(@channel)
-    @sec = !PRIV_TOKEN.blank?
     puts "Secure = #{@sec}"
 	end
 
