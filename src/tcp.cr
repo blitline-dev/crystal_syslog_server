@@ -44,6 +44,7 @@ class Tcp
 				rescue ex
 					p ex.message
 					p "Data:#{data}"
+          p "Remote address #{socket.remote_address.to_s}" if socket.remote_address
    	    end
         data = get_socket_data(socket)
 		  end

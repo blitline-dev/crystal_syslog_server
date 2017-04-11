@@ -44,7 +44,9 @@ class Action
     puts "Action is processing #{data}" if @debug    
 		return unless data
     if @sec
-      return unless data.tag.starts_with?(PRIV_TOKEN)
+      unless data.tag.starts_with?(PRIV_TOKEN)
+        raise "Illegal call, bad PRIV_TOKEN #{data}"
+      end
       data.tag = data.tag.byte_slice(PRIV_TOKEN_SIZE)
     end
 		@channel.send data
@@ -55,7 +57,7 @@ class Action
       loop do
       	begin
           data_hash = ch.receive
-				  if data_hash.facility[0..4] == "local"
+				  if data_hash.facility[0..4] == "local" || @sec
 					  @file_manager.write_to_file(data_hash, nil) do |file|
 							handlle_output(data_hash, file)
 						end
