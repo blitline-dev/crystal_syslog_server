@@ -11,10 +11,12 @@ class FileManager
     end
   end
 
-	def initialize(@root_url : String)
+	def initialize(@root_url : String, @size_limit : Int64)
   	@files = Hash(String,OpenFile).new
     @channel = Channel(String).new
     initialize_flusher
+    @paused = false
+    check_for_over_limit
 	end
 
   def initialize_flusher
@@ -25,15 +27,21 @@ class FileManager
         @files.each do | key, open_file |
           flush_as_necessary(open_file)
         end
+        check_for_over_limit
         sleep 120
       end
     end
+  end
+
+  def paused : Bool
+    return @paused
   end
 
   def flush_as_necessary(open_file : OpenFile)
     time_now = Time.now.epoch
     open_file.file.flush
     open_file.last_written = time_now
+    
   end
 
   def write_to_file(data_hash : SyslogData, event_name : String | Nil)
@@ -109,6 +117,20 @@ class FileManager
 			result
 		end
 	end
+
+  def check_for_over_limit
+    size = directory_size(@root_url)
+    if size > @size_limit
+      @paused = true
+    end
+  end
+
+  def directory_size(path : String) : Int64
+    size = Int64.new(0)
+    Dir.glob(File.join(path, "**", "*")) { |file| size+=File.size(file) }
+    puts size
+    size
+  end
 
 	def mkdir_p(path : String)
 		process_run("mkdir -p #{path}")

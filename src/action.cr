@@ -13,6 +13,7 @@ class Action
 	TAG = "tag"
   PRIV_TOKEN = ENV["CL_PRIV_TOKEN"]? || ""
   PRIV_TOKEN_SIZE = PRIV_TOKEN.size + 1
+  SIZE_LIMIT = ENV.has_key?("CL_SIZE_LIMIT") ? ENV["CL_SIZE_LIMIT"].to_i64 : 70_000_000_000
 
 	def initialize(@file_root : String, @debug : Bool)
     @sec = !PRIV_TOKEN.blank?
@@ -20,7 +21,7 @@ class Action
 		@file_watcher = FileWatcher.new
 		@events = Hash(String, JSON::Type).new
 		setup_configs(@file_watcher)
-		@file_manager = FileManager.new(@file_root)
+		@file_manager = FileManager.new(@file_root, SIZE_LIMIT)
 		@channel = Channel::Buffered(SyslogData).new
 		build_channel(@channel)
     puts "Secure = #{@sec}"
@@ -57,7 +58,7 @@ class Action
       loop do
       	begin
           data_hash = ch.receive
-				  if data_hash.facility[0..4] == "local" || @sec
+				  if (data_hash.facility[0..4] == "local" || @sec) && !@file_manager.paused
 					  @file_manager.write_to_file(data_hash, nil) do |file|
 							handlle_output(data_hash, file)
 						end
