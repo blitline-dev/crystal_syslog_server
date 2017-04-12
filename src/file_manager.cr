@@ -16,6 +16,7 @@ class FileManager
     @channel = Channel(String).new
     initialize_flusher
     @paused = false
+    puts "Size Limit #{@size_limit} for #{@root_url}"
     check_for_over_limit
 	end
 
@@ -121,14 +122,17 @@ class FileManager
   def check_for_over_limit
     size = directory_size(@root_url)
     if size > @size_limit
+      puts "Pausing #{@root_url}"
       @paused = true
+    else
+      puts "Unpausing #{@root_url}"
+      @paused = false
     end
   end
 
   def directory_size(path : String) : Int64
     size = Int64.new(0)
     Dir.glob(File.join(path, "**", "*")) { |file| size+=File.size(file) }
-    puts size
     size
   end
 
