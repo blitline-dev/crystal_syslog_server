@@ -31,14 +31,21 @@ class Processor
   TAG_TOKENIZER = "."
   VERSIONS = [:syslog, :rsyslog_micro, :rsyslog_full, :rsyslog_plus]
   TIME_SEGMENT = "%Y-%m-%dT%H:%M:%S"
+  LOGPLEX = ENV["CL_LOGPLEX"]? || ""
+
   def initialize
     @atomic_index = 0
+    @sec = !LOGPLEX.blank?
   end
 
   def process(data : String) : SyslogData | Nil
     begin
       if data
-        hash = split_data(data)
+        if @sec && data.includes?(LOGPLEX)
+          hash = split_data(data)
+        else
+          hash = split_data(data)
+        end
         return hash
       end
     rescue ex
