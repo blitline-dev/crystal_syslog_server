@@ -41,8 +41,11 @@ class Processor
   def process(data : String) : SyslogData | Nil
     begin
       if data
-        if @sec && data.includes?(LOGPLEX)
-          hash = split_data(data)
+        if @sec
+          hash = nil
+          if data.includes?(LOGPLEX)
+            hash = split_data(data)
+          end
         else
           hash = split_data(data)
         end
