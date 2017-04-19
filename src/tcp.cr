@@ -10,6 +10,11 @@ class Tcp
 		@connections = 0
     @version = ENV["CL_VERSION"]? || "0.0.0.0"
     @processor = Processor.new
+    Signal::USR1.trap do
+      @debug = !@debug
+      @debug_type == 0 ? @debug_type == 1 : @debug_type == 0
+      puts "Debug now: #$debug"
+    end
   end
 
   def get_socket_data(socket : TCPSocket)
