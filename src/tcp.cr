@@ -75,7 +75,7 @@ class Tcp
         loop do
           begin
             socket = socket_channel.receive
-            socket.read_timeout = 3
+            socket.read_timeout = 15
   					@connections += 1
   					reader(socket, @processor)
             socket.close
