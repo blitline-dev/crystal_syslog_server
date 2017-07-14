@@ -1,4 +1,5 @@
 require "./tcp.cr"
+require "./downloader.cr"
 
 port = ENV["CL_TCP_PORT"]? || "6768"
 stats_port = ENV["CL_STATS_TCP_PORT"]? || "6770"
@@ -11,10 +12,11 @@ if ENV["CL_DEBUG_TYPE"]? && ENV["CL_DEBUG_TYPE"].to_i > 0
   debug_type = ENV["CL_DEBUG_TYPE"].to_i
 end
 
-
 puts "Starting syslog server"
 puts "TCP listening on #{listen}:#{port}"
 puts "Writing to #{cl_dir}"
+puts "Downloading certs"
+Downloader.download_certs
 puts "Logging TCP-IN" if debug_type == 1
 server = Tcp.new(listen, port.to_i, cl_dir, debug, debug_type)
 server.listen()

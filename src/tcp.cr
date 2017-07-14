@@ -1,6 +1,7 @@
 require "socket"
 require "./processor.cr"
 require "./action"
+require "openssl"
 class Tcp
 
   TOTAL_FIBERS = 200
@@ -89,10 +90,30 @@ class Tcp
     end
   end
 
+  def spawn_ssl(socket_channel : Channel)
+    # SSL Server
+    spawn do
+      # Should block, loop is just a retry
+      loop do
+        begin
+          ssl_server = TCPServer.new(@host, @port - 1)
+          ssl_context = OpenSSL::SSL::Context::Server.new
+          ssl_context.private_key = "/etc/ssl/certs/server.key"
+          ssl_context.certificate_chain = "/etc/ssl/certs/server.crt"
+          ssl_context.verify_mode = OpenSSL::SSL::VerifyMode::NONE
+          ssl = OpenSSL::SSL::Socket::Server.new(ssl_server.accept, ssl_context, true)
+          socket_channel.send ssl
+        rescue ex
+          p "Error in spawn_ssl"
+          p ex.message
+        end
+      end
+    end
+  end
+
   def listen
 		ch = build_channel
 		server = TCPServer.new(@host, @port)
-
 		spawn_listener(ch)
     begin
   		loop do
@@ -108,6 +129,7 @@ class Tcp
   def build_channel
     Channel(TCPSocket).new
   end
+
 
 
 end
