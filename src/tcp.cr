@@ -21,7 +21,13 @@ class Tcp
   def get_socket_data(socket : IO)
     data = nil
     begin
-      data = socket.gets
+      raw_data = socket.gets(100)
+      while(raw_data)
+        data = data.nil? ? "" : data
+        data += raw_data
+        raw_data = socket.gets(100)
+      end
+
       puts data.to_s if @debug_type == 1
     rescue ex
       if @debug
