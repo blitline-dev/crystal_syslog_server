@@ -15,7 +15,8 @@ end
 # Make socat proxy
 fork do
   io = IO::Memory.new
-  cmd = "socat TCP-LISTEN:#{socat_proxy_port},fork TCP:#{port}"
+  cmd = "socat TCP-LISTEN:#{socat_proxy_port},fork TCP:0.0.0.0:#{port}"
+  puts cmd
   Process.run(cmd, shell: true, output: io)  
 end
 
