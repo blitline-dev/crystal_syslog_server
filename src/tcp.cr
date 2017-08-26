@@ -1,5 +1,7 @@
 require "socket"
 require "./processor.cr"
+require "./collectd_processor.cr"
+require "./collectd_action.cr"
 require "./action"
 class Tcp
 
@@ -10,6 +12,8 @@ class Tcp
 		@connections = 0
     @version = ENV["CL_VERSION"]? || "0.0.0.0"
     @processor = Processor.new
+    @collectd_processor = CollectDProcessor.new
+    @collectd_action = CollectDAction.new(@base_dir, @debug)
     Signal::USR1.trap do
       @debug = !@debug
       @debug_type == 0 ? @debug_type == 1 : @debug_type == 0
@@ -20,7 +24,7 @@ class Tcp
   def get_socket_data(socket : TCPSocket)
     data = nil
     begin
-      data = socket.gets
+      data = socket.gets(5000, true)
       puts data.to_s if @debug_type == 1
     rescue ex
       if @debug
@@ -44,8 +48,13 @@ class Tcp
     while data
 			if data && data.size > 5
 				begin
-		  	  formatted_data = processor.process(data)
-					@action.process(formatted_data)
+          if data.to_s[0..7] == "collectd"
+            formatted_data = @collectd_processor.process(data)
+            @collectd_action.process(formatted_data)
+          else
+  		  	  formatted_data = processor.process(data)
+	   				@action.process(formatted_data)
+          end
 				rescue ex
 					p ex.message
 					p "Data:#{data}"
@@ -58,12 +67,12 @@ class Tcp
 
   def stats_response(socket : TCPSocket)
     data = {
-      "version" : @version,
-      "debug" : @debug,
-      "connections" : @connections,
-      "port" :  @port,
-      "available" : TOTAL_FIBERS,
-      "open_file_count" : @action.open_file_count
+      "version" => @version,
+      "debug" => @debug,
+      "connections" => @connections,
+      "port" =>  @port,
+      "available" => TOTAL_FIBERS,
+      "open_file_count" => @action.open_file_count
     }
     p "Stats Response #{data}"
     socket.puts(data.to_json)
