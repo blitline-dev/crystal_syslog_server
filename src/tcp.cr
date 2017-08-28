@@ -24,7 +24,7 @@ class Tcp
   def get_socket_data(socket : TCPSocket)
     data = nil
     begin
-      data = socket.gets(5000, true)
+      data = socket.gets(true)
       puts data.to_s if @debug_type == 1
     rescue ex
       if @debug
