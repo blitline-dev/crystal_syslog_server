@@ -7,7 +7,15 @@ require "./string_mru"
 class CollectDAction
   PRIV_TOKEN = ENV["CL_PRIV_TOKEN"]? || ""
   PRIV_TOKEN_SIZE = PRIV_TOKEN.size + 1
-  SUPPORTED_TAGS = { "aggregation-cpu-average" => ["cpu-idle"], "load" => ["load"], "memory" => ["memory-used", "memory-buffered", "memory-cached","memory-free"], "df-root" => ["percent_bytes-free","percent_bytes-reserved"] }
+  SUPPORTED_TAGS = { 
+    "cpu-total" => ["cpu.usage_idle"], 
+    "aggregation-cpu-average" => ["cpu-idle"], 
+    "load" => ["load"], 
+    "memory_usage" => ["percentage"], 
+    "disk_usage" => ["percentage"],
+    "memory" => ["memory-used", "memory-buffered", "memory-cached","memory-free"], 
+    "df-root" => ["percent_bytes-free","percent_bytes-reserved"]
+  }
 
   def initialize(@file_root : String, @debug : Bool)
     @sec = !PRIV_TOKEN.blank?
@@ -52,7 +60,7 @@ class CollectDAction
 
     first_tag = tag[0]
     second_tag = tag[1]
-    if first_tag && SUPPORTED_TAGS.has_key?(first_tag)
+    if first_tag && (SUPPORTED_TAGS.has_key?(first_tag))
       if second_tag && SUPPORTED_TAGS[first_tag].includes?(second_tag)
         @host_mru.add("#{host}::#{tag.join('.')}::#{data}::#{timestamp}")
       end
