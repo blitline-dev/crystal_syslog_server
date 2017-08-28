@@ -53,7 +53,7 @@ class Processor
       end
     rescue ex
       if ex.message.to_s.includes?("Illegal Token")
-        puts "DATA=#{data}"
+        puts "DATA Processor=#{data}"
         puts ex.message
       else
         puts "In process:"

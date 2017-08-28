@@ -43,7 +43,7 @@ class Action
 
 	def process(data : SyslogData | ::Nil)
     puts "Action is processing #{data}" if @debug    
-		return unless data
+		return unless data && !data.empty?
     if @sec
       unless data.tag.starts_with?(PRIV_TOKEN)
         raise "Illegal call, bad PRIV_TOKEN #{data}"
