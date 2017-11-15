@@ -22,7 +22,7 @@ class Tcp
   def get_socket_data(socket : TCPSocket)
     data = ""
     begin
-      if txt = socket.gets(4086, true)
+      if txt = socket.gets(16000, true)
         data += txt.to_s
       end
       puts data.to_s if @debug_type == 1
