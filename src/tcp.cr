@@ -27,7 +27,7 @@ class Tcp
           data += txt.to_s
         end
         # If we are getting huge lines, bail
-        break if txt && txt.size > 12000
+        break if (socket.peek && socket.peek.size > 0) || data.size > 4000
       end
       puts data.to_s if @debug_type == 1
     rescue ex
