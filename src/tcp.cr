@@ -22,8 +22,12 @@ class Tcp
   def get_socket_data(socket : TCPSocket)
     data = ""
     begin
-      if txt = socket.gets(16000, true)
-        data += txt.to_s
+      loop do
+        if txt = socket.gets(16000, true)
+          data += txt.to_s
+        end
+        # If we are getting huge lines, bail
+        break if txt && txt.size > 12000
       end
       puts data.to_s if @debug_type == 1
     rescue ex
