@@ -22,7 +22,7 @@ class Tcp
   def get_socket_data(socket : TCPSocket)
     data = ""
     begin
-      if txt = socket.gets(2048, true)
+      if txt = socket.gets(4086, true)
         data += txt.to_s
       end
       puts data.to_s if @debug_type == 1
@@ -78,7 +78,7 @@ class Tcp
   def handle_connection(socket : TCPSocket)
     # In new Fiber
     socket.read_timeout = 15
-    #    socket.tcp_nodelay - true
+    socket.tcp_nodelay = true
     @connections += 1
     reader(socket, @processor)
     socket.close
@@ -90,7 +90,6 @@ class Tcp
 
     begin
       loop do
-        p "loop start"
         if socket = server.accept?
           # handle the client in a fiber
           spawn handle_connection(socket)
