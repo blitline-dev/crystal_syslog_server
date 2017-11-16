@@ -27,7 +27,7 @@ class Tcp
           data += txt.to_s
         end
         # If we are getting huge lines, bail
-        break if (socket.peek && socket.peek.size > 0) || data.size > 4000
+        break if txt && txt.size != 16000
       end
       puts data.to_s if @debug_type == 1
     rescue ex
@@ -40,30 +40,34 @@ class Tcp
   end
 
   def reader(socket : TCPSocket, processor : Processor)
-    data = get_socket_data(socket)
-    return if data.empty?
+    loop do
+      data = get_socket_data(socket)
+      return if data.empty?
 
-    if data.to_s[0..4] == "stats"
-      p "Stats"
-      stats_response(socket)
-      return
-    end
-
-    puts "Recieved: #{data}" if @debug
-    if data && data.size > 5
-      begin
-        if data.to_s[0..7] == "collectd"
-          formatted_data = @collectd_processor.process(data)
-          @collectd_action.process(formatted_data)
-        else
-          formatted_data = processor.process(data)
-          @action.process(formatted_data)
-        end
-      rescue ex
-        p ex.message
-        p "Data:#{data}"
-        p "Remote address #{socket.remote_address.to_s}" if socket.remote_address
+      if data.to_s[0..4] == "stats"
+        p "Stats"
+        stats_response(socket)
+        return
       end
+
+      puts "Recieved: #{data}" if @debug
+      if data && data.size > 5
+        begin
+          if data.to_s[0..7] == "collectd"
+            formatted_data = @collectd_processor.process(data)
+            @collectd_action.process(formatted_data)
+          else
+            formatted_data = processor.process(data)
+            @action.process(formatted_data)
+          end
+        rescue ex
+          p ex.message
+          p "Data:#{data}"
+          p "Remote address #{socket.remote_address.to_s}" if socket.remote_address
+        end
+      end
+      cont = socket.peek
+      break if cont == nil || cont.size == 0
     end
   end
 
