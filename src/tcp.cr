@@ -5,6 +5,8 @@ require "./collectd_action.cr"
 require "./action"
 
 class Tcp
+  GET_SIZE_LIMIT = 16000
+
   def initialize(@host : String, @port : Int32, @base_dir : String, @debug : Bool, @debug_type : Int32)
     @action = Action.new(@base_dir, @debug)
     @connections = 0
@@ -23,11 +25,12 @@ class Tcp
     data = ""
     begin
       loop do
-        if txt = socket.gets(16000, true)
+        if txt = socket.gets(GET_SIZE_LIMIT, true)
           data += txt.to_s
         end
-        # If we are getting huge lines, bail
-        break if txt && txt.size != 16000
+        # Break out normally, unless we have read the ENTIRE buffer, in which case
+        # there is probably more data, so we'll 'get' again
+        break if txt && txt.size != GET_SIZE_LIMIT
       end
       puts data.to_s if @debug_type == 1
     rescue ex
@@ -40,7 +43,9 @@ class Tcp
   end
 
   def reader(socket : TCPSocket, processor : Processor)
+    count = 0
     loop do
+      count += 1
       data = get_socket_data(socket)
       return if data.empty?
 
@@ -66,8 +71,10 @@ class Tcp
           p "Remote address #{socket.remote_address.to_s}" if socket.remote_address
         end
       end
-      cont = socket.peek
-      break if cont == nil || cont.size == 0
+      contin = socket.peek
+      # If there is no more data, or we have 1000 lines of logs, we will go ahead and break
+      # out and write them.
+      break if contin == nil || contin.size == 0 || count > 1000
     end
   end
 
