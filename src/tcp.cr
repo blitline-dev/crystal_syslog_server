@@ -42,6 +42,21 @@ class Tcp
     return data
   end
 
+  def peek_empty?(socket : TCPSocket)
+    begin
+      contin = socket.peek
+      return true if contin == nil || contin.size == 0
+    rescue ex
+      if @debug
+        puts "From peek_empty?:" + socket.remote_address.to_s if socket.remote_address
+        puts ex.inspect_with_backtrace
+      end
+      return true
+    end
+
+    return false
+  end
+
   def reader(socket : TCPSocket, processor : Processor)
     count = 0
     loop do
@@ -72,17 +87,10 @@ class Tcp
         end
       end
 
-      begin
-        contin = socket.peek
-        # If there is no more data, or we have 1000 lines of logs, we will go ahead and break
-        # out and write them.
-        break if contin == nil || contin.size == 0 || count > 1000
-      rescue ex_peek
-        if @debug
-          puts "From Peek:" + socket.remote_address.to_s if socket.remote_address
-          puts ex_peek.inspect_with_backtrace
-        end
-      end
+      contin = socket.peek
+      # If there is no more data, or we have 1000 lines of logs, we will go ahead and break
+      # out and write them.
+      break if peek_empty?(socket) || count > 1000
     end
   end
 
