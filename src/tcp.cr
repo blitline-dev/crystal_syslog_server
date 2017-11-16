@@ -71,10 +71,18 @@ class Tcp
           p "Remote address #{socket.remote_address.to_s}" if socket.remote_address
         end
       end
-      contin = socket.peek
-      # If there is no more data, or we have 1000 lines of logs, we will go ahead and break
-      # out and write them.
-      break if contin == nil || contin.size == 0 || count > 1000
+
+      begin
+        contin = socket.peek
+        # If there is no more data, or we have 1000 lines of logs, we will go ahead and break
+        # out and write them.
+        break if contin == nil || contin.size == 0 || count > 1000
+      rescue ex_peek
+        if @debug
+          puts "From Peek:" + socket.remote_address.to_s if socket.remote_address
+          puts ex_peek.inspect_with_backtrace
+        end
+      end
     end
   end
 
