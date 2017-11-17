@@ -5,6 +5,7 @@ require "./collectd_action.cr"
 require "./action"
 
 class Tcp
+  TOTAL_FIBERS   =   200
   GET_SIZE_LIMIT = 16000
 
   def initialize(@host : String, @port : Int32, @base_dir : String, @debug : Bool, @debug_type : Int32)
@@ -100,46 +101,50 @@ class Tcp
       "debug"           => @debug,
       "connections"     => @connections,
       "port"            => @port,
+      "available"       => TOTAL_FIBERS,
       "open_file_count" => @action.open_file_count,
     }
     p "Stats Response #{data}"
     socket.puts(data.to_json)
   end
 
-  def handle_connection(socket : TCPSocket)
-    # In new Fiber
-    socket.read_timeout = 15
-    socket.tcp_nodelay = true
-    @connections += 1
-    begin
-      reader(socket, @processor)
-    rescue ex
-      if @debug
-        puts "From handle_connection"
-        puts ex.inspect_with_backtrace
+  def spawn_listener(socket_channel : Channel)
+    TOTAL_FIBERS.times do
+      spawn do
+        loop do
+          begin
+            socket = socket_channel.receive
+            socket.read_timeout = 15
+            @connections += 1
+            reader(socket, @processor)
+            socket.close
+            @connections -= 1
+          rescue ex
+            p "Error in spawn_listener"
+            p ex.message
+          end
+        end
       end
-    ensure
-      socket.close
     end
-    @connections -= 1
   end
 
   def listen
+    ch = build_channel
     server = TCPServer.new(@host, @port)
 
+    spawn_listener(ch)
     begin
       loop do
-        if socket = server.accept?
-          # handle the client in a fiber
-          spawn handle_connection(socket)
-        else
-          # another fiber closed the server
-          break
-        end
+        socket = server.accept
+        ch.send socket
       end
     rescue ex
       p "Error in tcp:loop!"
       p ex.message
     end
+  end
+
+  def build_channel
+    Channel(TCPSocket).new
   end
 end
