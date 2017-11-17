@@ -43,6 +43,21 @@ class Tcp
     return data
   end
 
+  def peek_empty?(socket : TCPSocket)
+    begin
+      contin = socket.peek
+      return true if contin == nil || contin.size == 0
+    rescue ex
+      if @debug
+        puts "From peek_empty?:" + socket.remote_address.to_s if socket.remote_address
+        puts ex.inspect_with_backtrace
+      end
+      return true
+    end
+
+    return false
+  end
+
   def reader(socket : TCPSocket, processor : Processor)
     count = 0
     loop do
