@@ -26,7 +26,7 @@ class CollectDProcessor
       end
     rescue ex
       if ex.message.to_s.includes?("Illegal Token")
-        puts "DATA COLLECTD=#{data}"
+        puts "DATA=#{data}"
         puts ex.message
       else
         puts "In collectd_process:"
