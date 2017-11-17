@@ -111,8 +111,11 @@ class Tcp
     socket.read_timeout = 15
     socket.tcp_nodelay = true
     @connections += 1
-    reader(socket, @processor)
-    socket.close
+    begin
+      reader(socket, @processor)
+    ensure
+      socket.close
+    end
     @connections -= 1
   end
 
