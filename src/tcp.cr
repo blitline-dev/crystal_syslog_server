@@ -121,6 +121,8 @@ class Tcp
             @connections -= 1
           rescue ex
             p "Error in spawn_listener"
+            socket.close
+            @connections -= 1
             p ex.message
           end
         end
