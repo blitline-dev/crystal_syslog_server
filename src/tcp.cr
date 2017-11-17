@@ -113,6 +113,11 @@ class Tcp
     @connections += 1
     begin
       reader(socket, @processor)
+    rescue ex
+      if @debug
+        puts "From handle_connection"
+        puts ex.inspect_with_backtrace
+      end
     ensure
       socket.close
     end
