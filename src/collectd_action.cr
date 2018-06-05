@@ -1,4 +1,3 @@
-require "secure_random"
 require "json"
 require "./file_manager"
 require "./json_file_watcher"
@@ -7,14 +6,14 @@ require "./string_mru"
 class CollectDAction
   PRIV_TOKEN = ENV["CL_PRIV_TOKEN"]? || ""
   PRIV_TOKEN_SIZE = PRIV_TOKEN.size + 1
-  SUPPORTED_TAGS = { 
-    "cpu-total" => ["cpu.usage_idle"], 
-    "aggregation-cpu-average" => ["cpu-idle"], 
-    "load" => ["load"], 
-    "memory_usage" => ["percentage"], 
-    "disk_usage" => ["percentage"],
-    "memory" => ["memory-used", "memory-buffered", "memory-cached","memory-free"], 
-    "df-root" => ["percent_bytes-free","percent_bytes-reserved"]
+  SUPPORTED_TAGS  = {
+    "cpu-total"               => ["cpu.usage_idle"],
+    "aggregation-cpu-average" => ["cpu-idle"],
+    "load"                    => ["load"],
+    "memory_usage"            => ["percentage"],
+    "disk_usage"              => ["percentage"],
+    "memory"                  => ["memory-used", "memory-buffered", "memory-cached", "memory-free"],
+    "df-root"                 => ["percent_bytes-free", "percent_bytes-reserved"],
   }
 
   def initialize(@file_root : String, @debug : Bool)
@@ -65,6 +64,5 @@ class CollectDAction
         @host_mru.add("#{host}::#{tag.join('.')}::#{data}::#{timestamp}")
       end
     end
-    
-  end 
+  end
 end

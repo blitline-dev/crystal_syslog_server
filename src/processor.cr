@@ -1,4 +1,5 @@
 require "./type_table"
+
 # Syslog:
 # <134>Jan 16 21:07:33 cedis-1 cedis[1072]: jj6GZ LCREATE list:0W19rxER7il4KtrCsDCOcQg
 # Micro:
@@ -8,6 +9,8 @@ require "./type_table"
 # Rsyslog_plus:
 # <134>Jan 16 21:13:32 cedis-1 cedis jj6GZ DECR int:1hbE8qxgL5ngpcWc3EdQ6nw 1
 # <134>Feb 27 00:54:37 ip-10-61-214-99 docker_king[1129]:
+# Syslog_5424
+# <134>1 2018-06-05T21:52:31.329Z lambda lambda 1 - - {"body" : "foo"}
 
 struct SyslogData
   EMPTY = ""
@@ -21,17 +24,17 @@ struct SyslogData
   property ingestion_time : String
   property proc_id : String
 
-  def initialize(@facility=EMPTY, @severity=EMPTY, @log_local_time=EMPTY, @host=EMPTY, @tag=EMPTY, @body=EMPTY, @suid=EMPTY, @ingestion_time=EMPTY,@proc_id=EMPTY)
+  def initialize(@facility = EMPTY, @severity = EMPTY, @log_local_time = EMPTY, @host = EMPTY, @tag = EMPTY, @body = EMPTY, @suid = EMPTY, @ingestion_time = EMPTY, @proc_id = EMPTY)
   end
 end
 
 class Processor
-  LOOKUP_HASH = { "Jan" => 1, "Feb" => 2, "Mar" => 3, "Apr" => 4, "May" => 5, "Jun" => 6 , "Jul" => 7 , "Aug" => 8, "Sep" => 9,  "Oct" => 10, "Nov" => 11, "Dec" => 12}
-  TOKEN = ENV["CL_TOKEN"]?
+  LOOKUP_HASH   = {"Jan" => 1, "Feb" => 2, "Mar" => 3, "Apr" => 4, "May" => 5, "Jun" => 6, "Jul" => 7, "Aug" => 8, "Sep" => 9, "Oct" => 10, "Nov" => 11, "Dec" => 12}
+  TOKEN         = ENV["CL_TOKEN"]?
   TAG_TOKENIZER = "."
-  VERSIONS = [:syslog, :rsyslog_micro, :rsyslog_full, :rsyslog_plus]
-  TIME_SEGMENT = "%Y-%m-%dT%H:%M:%S"
-  LOGPLEX = ENV["CL_LOGPLEX"]? || ""
+  VERSIONS      = [:syslog, :rsyslog_micro, :rsyslog_full, :rsyslog_plus, :syslog_5424]
+  TIME_SEGMENT  = "%Y-%m-%dT%H:%M:%S"
+  LOGPLEX       = ENV["CL_LOGPLEX"]? || ""
 
   def initialize
     @atomic_index = 0
@@ -68,7 +71,7 @@ class Processor
   def determine_format(data : String) : Hash(Symbol, Array(String))
     pre_amble = data
     first_segments = pre_amble.split(" ", 8)
-    first_segments.reject! {|s| s.nil? || s.empty?}
+    first_segments.reject! { |s| s.nil? || s.empty? }
     if first_segments.nil?
       raise "First segment nil!!! data=#{data}"
     end
@@ -77,25 +80,25 @@ class Processor
       # Starts with '<134>Jan 16 21:07:33'
       # primitive or rsyslog
       if first_segments[4].includes?("[")
-        return { :primitive => first_segments }
+        return {:primitive => first_segments}
       else
-        return { :rsyslog => first_segments }
+        return {:rsyslog => first_segments}
       end
     else
       # Starts with '123 <134>Jan 16 21:07:33'
       # micro or rsyslog_full
       first_segments.shift # Delete first integer
       if first_segments[2].includes?(".")
-        return { :rsyslog_micro => first_segments }
+        return {:rsyslog_micro => first_segments}
       else
-        return { :rsyslog_full => first_segments }
+        return {:rsyslog_full => first_segments}
       end
     end
   end
 
   def get_facility_from_segment(segment : String)
     facility = "unknown"
-    md = segment.match(/<([0-9]*)>(1?)/) 
+    md = segment.match(/<([0-9]*)>(1?)/)
     if md
       facility = TypeTable.define(md[1].to_i)
     else
@@ -106,10 +109,10 @@ class Processor
 
   def get_timestamp_from_segment(segments : Array(String))
     segment = segments[0]
-    md = segment.match(/>([a-zA-Z].*)/) 
+    md = segment.match(/>([a-zA-Z].*)/)
     segments.shift
     if md
-      month = md[1] 
+      month = md[1]
       time = build_date(month, segments[0], segments[1])
       segments.shift(2)
     else
@@ -126,7 +129,6 @@ class Processor
     end
     return time
   end
-
 
   def normalize(segments : Array(String)) : SyslogData
     output = SyslogData.new
@@ -164,18 +166,20 @@ class Processor
       output.tag = output.tag.split("[")[0]
     end
     return output if segments.size == 0
-    segments.shift if segments[0] == "-"
-    return output if segments.size == 0
-    segments.shift if segments[0] == "-"
-    return output if segments.size == 0
-    segments.shift if segments[0] == "-"
-    return output if segments.size == 0
+
+    if segments[0..3].includes?("-")
+      rindex = segments[0..2].rindex { |x| x == "-" }
+      if rindex
+        segments.delete_at(0..rindex)
+      end
+    end
+
     output.body = segments.join(" ").strip
 
     return output
   end
 
-  def normalize_data(log_type : Symbol, segments : Array(String) ) : SyslogData
+  def normalize_data(log_type : Symbol, segments : Array(String)) : SyslogData
     output = SyslogData.new
     case log_type
     when :primitive
@@ -195,7 +199,6 @@ class Processor
     type_and_data = determine_format(data)
     log_type = type_and_data.keys[0]
     log_data = type_and_data[log_type]
-    
 
     output = normalize_data(log_type, log_data)
     return output
@@ -218,8 +221,7 @@ class Processor
     return tag
   end
 
-
-  def build_date(month : String, day : String , time : String)
+  def build_date(month : String, day : String, time : String)
     built_time = ""
     year = Time.now.year
     hour_minute_seconds = time.split(":")
