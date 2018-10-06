@@ -52,8 +52,10 @@ class Tcp
             formatted_data = @collectd_processor.process(data)
             @collectd_action.process(formatted_data)
           else
-            formatted_data = processor.process(data)
-            @action.process(formatted_data)
+            if data.valid_encoding?
+              formatted_data = processor.process(data)
+              @action.process(formatted_data)
+            end
           end
         rescue ex
           p ex.message
