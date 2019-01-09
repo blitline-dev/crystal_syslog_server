@@ -5,7 +5,6 @@ class TypeTable
     facilty_index = log_type / 8
     severity = log_type % 8
     facility = FACILITIES[facilty_index]
-		return [severity, facility]
+    return [severity, facility]
   end
-
 end

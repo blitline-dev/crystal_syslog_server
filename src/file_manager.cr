@@ -8,7 +8,7 @@ class FileManager
       @last_written = Int64.new(0)
       @file = file
       @buffer_size = buffer_size
-      @last_written = Time.now.epoch_ms
+      @last_written = Time.now.to_unix
     end
   end
 
@@ -40,7 +40,7 @@ class FileManager
   end
 
   def flush_as_necessary(open_file : OpenFile)
-    time_now = Time.now.epoch
+    time_now = Time.now.to_unix
     open_file.file.flush
     open_file.last_written = time_now
   end
@@ -96,7 +96,7 @@ class FileManager
   end
 
   def build_file_path(tag : String, time : String) : String
-    time_obj = Time.epoch(time.to_i)
+    time_obj = Time.unix(time.to_i)
     file_name = time_obj.to_s("%Y-%m-%d-%H.log")
     file_path = "#{@root_url}/#{tag}/#{file_name}"
     return file_path

@@ -18,7 +18,7 @@ class Action
     @sec = !PRIV_TOKEN.blank?
     @host_mru = StringMru.new(782400_i64, "#{@file_root}/hosts")
     @file_watcher = FileWatcher.new
-    @events = Hash(String, JSON::Type).new
+    @events = Hash(String, JSON::Any).new
     setup_configs(@file_watcher)
     @file_manager = FileManager.new(@file_root, SIZE_LIMIT)
     @channel = Channel::Buffered(SyslogData).new
@@ -33,7 +33,7 @@ class Action
   def setup_configs(file_watcher : FileWatcher)
     # Events Config
     json_watcher = JSONFileWatcher.new(file_watcher, @debug)
-    r = Proc(Hash(String, JSON::Type), Nil).new { |x| @events = x["events"].as(Hash(String, JSON::Type)) }
+    r = Proc(JSON::Any, Nil).new { |x| @events = x["events"].as(JSON::Any) }
     filepath = "#{@file_root}/events.json"
     data = "{ \"events\" : {} }"
     File.write(filepath, data) unless File.exists?(filepath)
@@ -85,13 +85,13 @@ class Action
 
   private def check_events(data_hash)
     tag = data_hash.tag
-    events_for_tag = @events[tag]?.as(Hash(String, JSON::Type) | Nil)
+    events_for_tag = @events[tag]?.as(Hash(String, JSON::Any) | Nil)
     return unless events_for_tag
 
     puts "Checking Events..." if @debug
     events_for_tag.keys.each do |event_key|
       # Compiler workaround
-      b = events_for_tag[event_key].as(Hash(String, JSON::Type))
+      b = events_for_tag[event_key].as(Hash(String, JSON::Any))
       name = b.fetch(EVENT_CONFIG_NAME, nil).to_s
       find = b.fetch(EVENT_CONFIG_FIND, nil).to_s
       findex = b.fetch(EVENT_CONFIG_FINDEX, nil).to_s

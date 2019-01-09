@@ -119,9 +119,9 @@ class Processor
       # New Timestamp format
       begin
         segment = segments[0]
-        time = Time.parse(segment, TIME_SEGMENT, Time::Kind::Utc)
+        time = Time.parse_iso8601(segment)
       rescue bs
-        puts "In get_timestamp_from_segment:"
+        puts "In get_timestamp_from_segment: #{segment}"
         puts bs.inspect_with_backtrace
         time = Time.now
       end
