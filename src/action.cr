@@ -85,17 +85,18 @@ class Action
 
   private def check_events(data_hash)
     tag = data_hash.tag
-    events_for_tag = @events[tag]?.as(Hash(String, JSON::Any) | Nil)
+    events_for_tag = @events[tag]?
     return unless events_for_tag
 
+    hashed_events_for_tag = events_for_tag.as_h
     puts "Checking Events..." if @debug
-    events_for_tag.keys.each do |event_key|
+    hashed_events_for_tag.keys.each do |event_key|
       # Compiler workaround
-      b = events_for_tag[event_key].as(Hash(String, JSON::Any))
-      name = b.fetch(EVENT_CONFIG_NAME, nil).to_s
-      find = b.fetch(EVENT_CONFIG_FIND, nil).to_s
-      findex = b.fetch(EVENT_CONFIG_FINDEX, nil).to_s
-      replace = b.fetch(EVENT_CONFIG_REPLACE, nil).to_s
+      b = events_for_tag[event_key]
+      name = b.dig(EVENT_CONFIG_NAME).to_s
+      find = b.dig(EVENT_CONFIG_FIND).to_s
+      findex = b.dig(EVENT_CONFIG_FINDEX).to_s
+      replace = b.dig(EVENT_CONFIG_REPLACE).to_s
       # End compiler workaround
       handle_find(data_hash, find, name, false) unless find.empty?
       handle_find(data_hash, find, name, true) unless findex.empty?
