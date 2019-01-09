@@ -93,10 +93,10 @@ class Action
     hashed_events_for_tag.keys.each do |event_key|
       # Compiler workaround
       b = events_for_tag[event_key]
-      name = b.dig(EVENT_CONFIG_NAME).to_s
-      find = b.dig(EVENT_CONFIG_FIND).to_s
-      findex = b.dig(EVENT_CONFIG_FINDEX).to_s
-      replace = b.dig(EVENT_CONFIG_REPLACE).to_s
+      name = b.dig?(EVENT_CONFIG_NAME).to_s
+      find = b.dig?(EVENT_CONFIG_FIND).to_s
+      findex = b.dig?(EVENT_CONFIG_FINDEX).to_s
+      replace = b.dig?(EVENT_CONFIG_REPLACE).to_s
       # End compiler workaround
       handle_find(data_hash, find, name, false) unless find.empty?
       handle_find(data_hash, find, name, true) unless findex.empty?
