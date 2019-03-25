@@ -45,23 +45,21 @@ class Tcp
     end
 
     puts "Recieved: #{data}" if @debug
-    while data
-      if data && data.size > 5
-        begin
-          if data.to_s[0..7] == "collectd"
-            formatted_data = @collectd_processor.process(data)
-            @collectd_action.process(formatted_data)
-          else
-            return unless data.valid_encoding?
-            formatted_data = processor.process(data)
-            @action.process(formatted_data)
-          end
-        rescue ex
-          p ex.message
-          p "Data:#{data}"
-          p "Remote address #{socket.remote_address.to_s}" if socket.remote_address
+    if data && data.size > 5
+      begin
+        if data.to_s[0..7] == "collectd"
+          formatted_data = @collectd_processor.process(data)
+          @collectd_action.process(formatted_data)
+        else
+          return unless data.valid_encoding?
+          formatted_data = processor.process(data)
+          @action.process(formatted_data)
+          data = nil
         end
-        data = get_socket_data(socket)
+      rescue ex
+        puts ex.message
+        puts "Data:#{data}"
+        puts "Remote address #{socket.remote_address.to_s}" if socket.remote_address
       end
     end
   end
@@ -91,8 +89,12 @@ class Tcp
             socket.close
             @connections -= 1
           rescue ex
-            p "Error in spawn_listener"
-            p ex.message
+            if socket
+              socket.close
+            end
+            @connections -= 1
+            puts "Error in spawn_listener"
+            puts ex.message
           end
         end
       end
@@ -110,8 +112,8 @@ class Tcp
         ch.send socket
       end
     rescue ex
-      p "Error in tcp:loop!"
-      p ex.message
+      puts "Error in tcp:loop!"
+      puts ex.message
     end
   end
 
