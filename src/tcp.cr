@@ -22,46 +22,47 @@ class Tcp
   end
 
   def get_socket_data(socket : TCPSocket)
-    data = nil
     begin
-      data = socket.gets_to_end.to_s.chomp
-      puts data.to_s if @debug_type == 1
+      socket.each_line do |line|
+        puts line.to_s if @debug_type == 1
+        yield(line)
+      end
     rescue ex
       if @debug
         puts "From Socket Address:" + socket.remote_address.to_s if socket.remote_address
         puts ex.inspect_with_backtrace
       end
     end
-    return data
   end
 
   def reader(socket : TCPSocket, processor : Processor)
-    lines = get_socket_data(socket)
-    if lines
-      lines.each_line do |data|
-        if data.to_s[0..4] == "stats"
-          p "Stats"
-          stats_response(socket)
-          return
-        end
+    get_socket_data(socket) do |lines|
+      if lines
+        lines.each_line do |data|
+          if data.to_s[0..4] == "stats"
+            p "Stats"
+            stats_response(socket)
+            return
+          end
 
-        puts "Recieved: #{data}" if @debug
+          puts "Recieved: #{data}" if @debug
 
-        if data && data.size > 5
-          begin
-            if data.to_s[0..7] == "collectd"
-              formatted_data = @collectd_processor.process(data)
-              @collectd_action.process(formatted_data)
-            else
-              return unless data.valid_encoding?
-              formatted_data = processor.process(data)
-              @action.process(formatted_data)
-              data = nil
+          if data && data.size > 5
+            begin
+              if data.to_s[0..7] == "collectd"
+                formatted_data = @collectd_processor.process(data)
+                @collectd_action.process(formatted_data)
+              else
+                return unless data.valid_encoding?
+                formatted_data = processor.process(data)
+                @action.process(formatted_data)
+                data = nil
+              end
+            rescue ex
+              puts ex.message
+              puts "Data:#{data}"
+              puts "Remote address #{socket.remote_address.to_s}" if socket.remote_address
             end
-          rescue ex
-            puts ex.message
-            puts "Data:#{data}"
-            puts "Remote address #{socket.remote_address.to_s}" if socket.remote_address
           end
         end
       end
