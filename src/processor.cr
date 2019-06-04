@@ -11,6 +11,7 @@ require "./type_table"
 # <134>Feb 27 00:54:37 ip-10-61-214-99 docker_king[1129]:
 # Syslog_5424
 # <134>1 2018-06-05T21:52:31.329Z lambda lambda 1 - - {"body" : "foo"}
+# <164>2019-06-04T20:34:33.217Z lambda LambdaApp[1]:"status_board [04/Jun/2019:20:34:28 +0000] \"GET /nydus/queue?format=json HTTP/1.1\" 200 12008"
 
 struct SyslogData
   EMPTY = ""
@@ -110,12 +111,13 @@ class Processor
   def get_timestamp_from_segment(segments : Array(String))
     segment = segments[0]
     md = segment.match(/>([a-zA-Z].*)/)
-    segments.shift
     if md
+      segments.shift
       month = md[1]
       time = build_date(month, segments[0], segments[1])
       segments.shift(2)
     else
+      segments.shift if segment == "1" || segment.size == 1
       # New Timestamp format
       begin
         segment = segments[0]
