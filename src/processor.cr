@@ -80,7 +80,7 @@ class Processor
     if first_segments[0].includes?("<")
       # Starts with '<134>Jan 16 21:07:33'
       # primitive or rsyslog
-      if first_segments[4].includes?("[")
+      if first_segments.size > 4 && first_segments[4].includes?("[")
         return {:primitive => first_segments}
       else
         return {:rsyslog => first_segments}
@@ -117,7 +117,12 @@ class Processor
       time = build_date(month, segments[0], segments[1])
       segments.shift(2)
     else
-      segments.shift if segment == "1" || segment.size < 20
+      if segment.match(/<([0-9]*)>(1?)/)
+        segment = segment.gsub(/<([0-9]*)>(1?)/, "").strip
+        segments[0] = segment
+      end
+
+      segments.shift if segments[0].empty?
       # New Timestamp format
       begin
         segment = segments[0]
@@ -200,6 +205,7 @@ class Processor
 
   def split_data(data : String) : SyslogData
     type_and_data = determine_format(data)
+
     log_type = type_and_data.keys[0]
     log_data = type_and_data[log_type]
 
