@@ -117,7 +117,7 @@ class Processor
       time = build_date(month, segments[0], segments[1])
       segments.shift(2)
     else
-      segments.shift if segment == "1" || segment.size < 20 || segment.includes?('>')
+      segments.shift if segment == "1" || segment.size < 20
       # New Timestamp format
       begin
         segment = segments[0]
