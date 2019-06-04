@@ -10,7 +10,7 @@ RUN chmod 771 -R /var/log/commonlogs
 RUN apt-get update
 RUN apt-get install -y wget socat nano tcpdump
 
-ENV CL_VERSION="1.01.19"
+ENV CL_VERSION="1.01.20"
 
 RUN git clone https://github.com/blitline-dev/crystal_syslog_server.git
 RUN cd crystal_syslog_server/src && crystal build --release main.cr -o server
