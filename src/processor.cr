@@ -126,6 +126,7 @@ class Processor
         puts "In get_timestamp_from_segment: #{segment}"
         puts bs.inspect_with_backtrace
         time = Time.now
+        raise "Failed time parse, not continuing"
       end
       segments.shift
     end
