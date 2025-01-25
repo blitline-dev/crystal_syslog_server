@@ -21,7 +21,7 @@ class Action
     @events = Hash(String, JSON::Any).new
     setup_configs(@file_watcher)
     @file_manager = FileManager.new(@file_root, SIZE_LIMIT)
-    @channel = Channel::Buffered(SyslogData).new
+    @channel = Channel(SyslogData).new(0)
     build_channel(@channel)
     puts "Secure = #{@sec}"
   end

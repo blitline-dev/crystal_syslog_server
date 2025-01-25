@@ -9,7 +9,7 @@ class StringMru
   def initialize(lifespan : Int64, filepath : String)
     @lifespan = lifespan
     @mru_hash = Hash(String, MruData).new
-    @rough_time = Time.now
+    @rough_time = Time.local
     @filepath = filepath
     start_cleaner
   end
@@ -24,7 +24,7 @@ class StringMru
 
   def write_recents
     file = File.open(@filepath, "w+")
-    @mru_hash.each do |k,v|
+    @mru_hash.each do |k, v|
       file.puts("#{k} #{v.updated_at.to_s("%s")}")
     end
     file.flush
@@ -35,13 +35,13 @@ class StringMru
     spawn do
       loop do
         begin
-          time_now = Time.now
+          time_now = Time.local
           @rough_time = time_now
-          @mru_hash.delete_if do |k, v|
+          @mru_hash.reject! do |k, v|
             v.updated_at < time_now - @lifespan.seconds
           end
           write_recents
-          sleep(60)
+          ::sleep(60.seconds)
         rescue ex
           puts "Failed in string_mru"
           puts ex.message

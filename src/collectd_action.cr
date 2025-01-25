@@ -4,7 +4,7 @@ require "./json_file_watcher"
 require "./string_mru"
 
 class CollectDAction
-  PRIV_TOKEN = ENV["CL_PRIV_TOKEN"]? || ""
+  PRIV_TOKEN      = ENV["CL_PRIV_TOKEN"]? || ""
   PRIV_TOKEN_SIZE = PRIV_TOKEN.size + 1
   SUPPORTED_TAGS  = {
     "cpu-total"               => ["cpu.usage_idle"],
@@ -19,7 +19,7 @@ class CollectDAction
   def initialize(@file_root : String, @debug : Bool)
     @sec = !PRIV_TOKEN.blank?
     @host_mru = StringMru.new(3600_i64, "#{@file_root}/collectd")
-    @channel = Channel::Buffered(CollectDData).new
+    @channel = Channel(CollectDData).new(1)
     build_channel(@channel)
     puts "Secure = #{@sec}"
   end

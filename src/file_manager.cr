@@ -8,7 +8,7 @@ class FileManager
       @last_written = Int64.new(0)
       @file = file
       @buffer_size = buffer_size
-      @last_written = Time.now.to_unix
+      @last_written = Time.utc.to_unix
     end
   end
 
@@ -30,7 +30,7 @@ class FileManager
           flush_as_necessary(open_file)
         end
         check_for_over_limit
-        sleep 120
+        ::sleep(120.seconds)
       end
     end
   end
@@ -40,7 +40,7 @@ class FileManager
   end
 
   def flush_as_necessary(open_file : OpenFile)
-    time_now = Time.now.to_unix
+    time_now = Time.utc.to_unix
     open_file.file.flush
     open_file.last_written = time_now
   end
@@ -103,10 +103,10 @@ class FileManager
   end
 
   def cleanup_files
-    time = Time.now.to_s("%Y-%m-%d-%H.log")
+    time = Time.local.to_s("%Y-%m-%d-%H.log")
 
     # Close and delete files if they are old
-    @files.delete_if do |k, v|
+    @files.reject! do |k, v|
       result = false
       filename = File.basename(k)
       if filename < time

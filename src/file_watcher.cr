@@ -13,7 +13,7 @@ class FileWatcher
   end
 
   def add_file(file_path : String, listener : Proc(Nil))
-    file_data = FileData.new(file_path, Time.now, listener)
+    file_data = FileData.new(file_path, Time.utc, listener)
     @files[file_path] = file_data
   end
 
@@ -25,7 +25,7 @@ class FileWatcher
             @channel.send(file_data)
           end
         end
-        sleep 5
+        ::sleep(5.seconds)
       end
     end
   end

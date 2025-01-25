@@ -130,7 +130,7 @@ class Processor
       rescue bs
         puts "In get_timestamp_from_segment: #{segment}"
         puts bs.inspect_with_backtrace
-        time = Time.now
+        time = Time.local
         raise "Failed time parse, not continuing"
       end
       segments.shift
@@ -161,7 +161,7 @@ class Processor
     end
     output.tag = validate_tag(segments[0])
     output.suid = atomic_counter.to_s
-    output.ingestion_time = Time.now.to_s("%s")
+    output.ingestion_time = Time.local.to_s("%s")
 
     # Handle other optional items
     return output if segments.size == 0
@@ -232,9 +232,16 @@ class Processor
 
   def build_date(month : String, day : String, time : String)
     built_time = ""
-    year = Time.now.year
+    year = Time.local.year
     hour_minute_seconds = time.split(":")
-    built_time = Time.new(year, LOOKUP_HASH[month[0..2].camelcase], day.to_i, hour_minute_seconds[0].to_i, hour_minute_seconds[1].to_i, hour_minute_seconds[2].to_i)
+    built_time = Time.local(
+      year,
+      LOOKUP_HASH[month[0..2].camelcase],
+      day.to_i,
+      hour_minute_seconds[0].to_i,
+      hour_minute_seconds[1].to_i,
+      hour_minute_seconds[2].to_i
+    )
     return built_time
   end
 end

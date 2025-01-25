@@ -4,7 +4,7 @@ class TypeTable
   def self.define(log_type : Int32)
     facilty_index = log_type / 8
     severity = log_type % 8
-    facility = FACILITIES[facilty_index]
+    facility = FACILITIES[facilty_index.to_i]
     return [severity, facility]
   end
 end
